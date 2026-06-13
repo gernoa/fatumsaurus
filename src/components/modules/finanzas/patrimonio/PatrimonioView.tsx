@@ -126,14 +126,21 @@ export function PatrimonioView() {
           emptyText="Añade la cuenta bancaria que compartís para registrar los gastos conjuntos."
         />
 
-        {/* Investments placeholder */}
+        {/* Link to Inversiones */}
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
             Inversiones
           </p>
-          <div className="flex items-center justify-center h-20 rounded-[16px] border border-dashed border-border bg-secondary/40">
-            <p className="text-xs text-muted-foreground">Próximamente — módulo de inversiones</p>
-          </div>
+          <a
+            href="/finanzas/inversiones"
+            className="flex items-center justify-between h-14 px-4 rounded-[14px] bg-card border border-border hover:border-petroleo/40 hover:shadow-[0_2px_12px_rgba(0,95,115,0.08)] transition-all group"
+          >
+            <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <span className="text-base">📈</span>
+              Ver mis inversiones
+            </span>
+            <span className="text-xs text-muted-foreground group-hover:text-petroleo transition-colors">→</span>
+          </a>
         </div>
 
       </div>
