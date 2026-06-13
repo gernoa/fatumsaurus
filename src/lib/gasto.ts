@@ -46,6 +46,13 @@ export interface GastoThirdParty {
  * - Third-party debts (if thirdParty.length > 0) — each entry is a debt
  *   from that user, split equally among conjunta members if paidVia === 'conjunta'
  */
+export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly'
+
+export interface GastoRecurring {
+  frequency: RecurringFrequency
+  nextDate: string   // YYYY-MM-DD
+}
+
 export interface Gasto {
   id: string
   description: string
@@ -57,6 +64,7 @@ export interface Gasto {
   accountId?: string   // which account was debited
   notes?: string
   thirdParty: GastoThirdParty[]
+  recurring?: GastoRecurring
 }
 
 // ─── Derived calculations ─────────────────────────────────────────────────────

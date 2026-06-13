@@ -16,6 +16,7 @@ import {
   groupByDate,
   type Gasto,
 } from '@/lib/gasto'
+import { RefreshCw } from 'lucide-react'
 import { NuevoGastoModal } from './NuevoGastoModal'
 
 const MONTHS = [
@@ -201,6 +202,9 @@ export function GastosView() {
                         )}
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
+                        {g.recurring && (
+                          <RefreshCw className="w-3 h-3 text-petroleo/60 hidden sm:block" />
+                        )}
                         <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full hidden sm:block', cat.colorClass)}>
                           {cat.label}
                         </span>

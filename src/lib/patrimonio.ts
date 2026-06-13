@@ -2,14 +2,15 @@ export type AccountType = 'personal' | 'conjunta'
 
 export interface PatrimonioAccount {
   id: string
-  ownerId: string      // userId, 'shared' for conjunta
-  name: string         // "BBVA corriente", "Openbank ahorro"...
-  bank?: string        // optional bank name
+  ownerId: string        // userId, 'shared' for conjunta
+  name: string
+  bank?: string
   type: AccountType
   emoji: string
-  balance: number      // current balance (manual)
-  lastUpdated: string  // YYYY-MM-DD
+  balance: number
+  lastUpdated: string    // YYYY-MM-DD
   isActive: boolean
+  participantIds: string[] // for conjunta: who splits expenses; for personal: [ownerId]
 }
 
 export const ACCOUNT_EMOJIS = ['🏦', '🏧', '💰', '💳', '🐖', '🏠', '💼', '🌍', '📈', '💵']
@@ -24,6 +25,7 @@ export const DEFAULT_ACCOUNTS: PatrimonioAccount[] = [
     balance: 0,
     lastUpdated: '2026-06-13',
     isActive: true,
+    participantIds: ['ainhoa'],
   },
   {
     id: 'acc-default-conjunta',
@@ -34,5 +36,6 @@ export const DEFAULT_ACCOUNTS: PatrimonioAccount[] = [
     balance: 0,
     lastUpdated: '2026-06-13',
     isActive: true,
+    participantIds: ['ainhoa', 'javier'],
   },
 ]

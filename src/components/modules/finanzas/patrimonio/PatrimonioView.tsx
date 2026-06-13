@@ -113,6 +113,7 @@ export function PatrimonioView() {
               balance: 0,
               lastUpdated: '2026-06-13',
               isActive: true,
+              participantIds: [],
             })
             setShowModal(true)
           }}
