@@ -8,23 +8,30 @@ export interface UserProfile {
   avatar_type:  string
   avatar_value: string | null
   email:        string
+  partner_id:   string | null
 }
 
 interface SessionContextValue {
-  user: UserProfile
+  user:     UserProfile
+  allUsers: UserProfile[]
+  partner:  UserProfile | null
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null)
 
 export function SessionProvider({
   user,
+  allUsers,
+  partner,
   children,
 }: {
   user:     UserProfile
+  allUsers: UserProfile[]
+  partner:  UserProfile | null
   children: ReactNode
 }) {
   return (
-    <SessionContext.Provider value={{ user }}>
+    <SessionContext.Provider value={{ user, allUsers, partner }}>
       {children}
     </SessionContext.Provider>
   )

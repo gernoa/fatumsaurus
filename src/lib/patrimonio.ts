@@ -15,27 +15,5 @@ export interface PatrimonioAccount {
 
 export const ACCOUNT_EMOJIS = ['🏦', '🏧', '💰', '💳', '🐖', '🏠', '💼', '🌍', '📈', '💵']
 
-export const DEFAULT_ACCOUNTS: PatrimonioAccount[] = [
-  {
-    id: 'acc-default-personal',
-    ownerId: 'ainhoa',
-    name: 'Mi cuenta',
-    type: 'personal',
-    emoji: '🏦',
-    balance: 0,
-    lastUpdated: '2026-06-13',
-    isActive: true,
-    participantIds: ['ainhoa'],
-  },
-  {
-    id: 'acc-default-conjunta',
-    ownerId: 'shared',
-    name: 'Cuenta conjunta',
-    type: 'conjunta',
-    emoji: '🏠',
-    balance: 0,
-    lastUpdated: '2026-06-13',
-    isActive: true,
-    participantIds: ['ainhoa', 'javier'],
-  },
-]
+// Las cuentas por defecto se generan en PatrimonioProvider con el ID real del usuario
+export const DEFAULT_ACCOUNTS: PatrimonioAccount[] = []

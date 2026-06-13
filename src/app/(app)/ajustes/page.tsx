@@ -1,6 +1,12 @@
 import { Settings } from 'lucide-react'
-import { ModulePageShell } from '@/components/layout/ModulePageShell'
+import { ModuleHeader } from '@/components/layout/ModuleHeader'
+import { AjustesView } from '@/components/modules/ajustes/AjustesView'
 
 export default function AjustesPage() {
-  return <ModulePageShell title="Ajustes" icon={Settings} />
+  return (
+    <div className="flex flex-col min-h-full">
+      <ModuleHeader title="Ajustes" icon={Settings} />
+      <AjustesView />
+    </div>
+  )
 }

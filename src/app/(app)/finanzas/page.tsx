@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
+import { FinanzasResumenView } from '@/components/modules/finanzas/resumen/FinanzasResumenView'
 
 export default function FinanzasPage() {
-  redirect('/finanzas/tricount')
+  return <FinanzasResumenView />
 }

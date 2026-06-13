@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { X, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ACCOUNT_EMOJIS, type AccountType, type PatrimonioAccount } from '@/lib/patrimonio'
-import { APP_USERS, CURRENT_USER_ID } from '@/lib/users'
+import { useUsers } from '@/lib/users'
 
 interface Props {
   initialAccount?: PatrimonioAccount
@@ -12,11 +12,10 @@ interface Props {
   onClose: () => void
 }
 
-const TODAY = '2026-06-13'
-const OTHER_USERS = APP_USERS.filter((u) => u.id !== CURRENT_USER_ID)
-
 export function NuevaCuentaModal({ initialAccount, onSave, onClose }: Props) {
+  const { currentUser, otherUsers } = useUsers()
   const isEdit = !!initialAccount
+  const TODAY = new Date().toISOString().split('T')[0]
 
   const [name, setName] = useState(initialAccount?.name ?? '')
   const [bank, setBank] = useState(initialAccount?.bank ?? '')
@@ -25,7 +24,7 @@ export function NuevaCuentaModal({ initialAccount, onSave, onClose }: Props) {
   const [balance, setBalance] = useState(initialAccount?.balance.toString() ?? '0')
   // For conjunta: participantIds always includes current user; others are togglable
   const [extraParticipants, setExtraParticipants] = useState<string[]>(
-    (initialAccount?.participantIds ?? []).filter((id) => id !== CURRENT_USER_ID)
+    (initialAccount?.participantIds ?? []).filter((id) => id !== currentUser.id)
   )
   const [error, setError] = useState('')
 
@@ -43,11 +42,11 @@ export function NuevaCuentaModal({ initialAccount, onSave, onClose }: Props) {
     const balanceNum = parseFloat(balance.replace(',', '.')) || 0
     const participantIds =
       type === 'conjunta'
-        ? [CURRENT_USER_ID, ...extraParticipants]
-        : [CURRENT_USER_ID]
+        ? [currentUser.id, ...extraParticipants]
+        : [currentUser.id]
 
     onSave({
-      ownerId: type === 'conjunta' ? 'shared' : CURRENT_USER_ID,
+      ownerId: type === 'conjunta' ? 'shared' : currentUser.id,
       name: name.trim(),
       bank: bank.trim() || undefined,
       type,
@@ -115,17 +114,17 @@ export function NuevaCuentaModal({ initialAccount, onSave, onClose }: Props) {
                 {/* Current user — always included, locked */}
                 <div className="flex items-center gap-3 px-3 py-2.5 bg-petroleo/8 rounded-[10px] border border-petroleo/20">
                   <div className="w-7 h-7 rounded-full bg-petroleo text-white text-[11px] font-semibold flex items-center justify-center flex-shrink-0">
-                    {APP_USERS.find((u) => u.id === CURRENT_USER_ID)?.initial}
+                    {currentUser.initial}
                   </div>
                   <span className="flex-1 text-sm font-medium text-foreground">
-                    {APP_USERS.find((u) => u.id === CURRENT_USER_ID)?.name}
+                    {currentUser.name}
                     <span className="ml-1.5 text-[10px] text-muted-foreground font-normal">(tú)</span>
                   </span>
                   <Check className="w-4 h-4 text-petroleo flex-shrink-0" />
                 </div>
 
                 {/* Other users — toggleable */}
-                {OTHER_USERS.map((u) => {
+                {otherUsers.map((u) => {
                   const selected = extraParticipants.includes(u.id)
                   return (
                     <button

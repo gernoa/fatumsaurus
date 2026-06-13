@@ -7,19 +7,20 @@ import { formatCurrency, formatDateShort } from '@/lib/format'
 import { usePatrimonio } from '@/contexts/patrimonioContext'
 import { type PatrimonioAccount } from '@/lib/patrimonio'
 import { NuevaCuentaModal } from './NuevaCuentaModal'
-import { CURRENT_USER_ID } from '@/lib/users'
+import { useUsers } from '@/lib/users'
 import { toast } from 'sonner'
 
 type EditingBalance = { id: string; value: string } | null
 
 export function PatrimonioView() {
   const { accounts, addAccount, updateAccount, deleteAccount } = usePatrimonio()
+  const { currentUser } = useUsers()
   const [showModal, setShowModal] = useState(false)
   const [editingAccount, setEditingAccount] = useState<PatrimonioAccount | undefined>(undefined)
   const [editingBalance, setEditingBalance] = useState<EditingBalance>(null)
 
   const personal = accounts.filter(
-    (a) => a.type === 'personal' && a.ownerId === CURRENT_USER_ID && a.isActive
+    (a) => a.type === 'personal' && a.ownerId === currentUser.id && a.isActive
   )
   const conjunta = accounts.filter((a) => a.type === 'conjunta' && a.isActive)
 

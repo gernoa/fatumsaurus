@@ -34,41 +34,13 @@ export interface ConjuntaBalance {
   net: number // positive = is owed, negative = owes
 }
 
-// ─── Members ──────────────────────────────────────────────────────────────────
+// ─── Mock data (vacío — los datos reales vienen de la sesión y del contexto) ───
 
-export const CONJUNTA_MEMBERS: ConjuntaMember[] = [
-  { id: 'ainhoa', name: 'Ainhoa', initial: 'A' },
-  { id: 'javier', name: 'Javier', initial: 'J' },
-]
+export const MOCK_DEPOSITS: ConjuntaDeposit[] = []
+export const MOCK_EXPENSES: ConjuntaExpense[] = []
 
-export const CURRENT_USER_ID = 'ainhoa'
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-export const MOCK_DEPOSITS: ConjuntaDeposit[] = [
-  { id: 'd1',  userId: 'ainhoa', amount: 300, description: 'Aportación enero',   date: '2026-01-01' },
-  { id: 'd2',  userId: 'javier', amount: 700, description: 'Aportación enero',   date: '2026-01-01' },
-  { id: 'd3',  userId: 'ainhoa', amount: 300, description: 'Aportación febrero', date: '2026-02-01' },
-  { id: 'd4',  userId: 'javier', amount: 700, description: 'Aportación febrero', date: '2026-02-01' },
-  { id: 'd5',  userId: 'ainhoa', amount: 300, description: 'Aportación marzo',   date: '2026-03-01' },
-  { id: 'd6',  userId: 'javier', amount: 700, description: 'Aportación marzo',   date: '2026-03-01' },
-]
-
-export const MOCK_EXPENSES: ConjuntaExpense[] = [
-  { id: 'e1',  description: 'Alquiler enero',    amount: 750, category: 'Alquiler',    date: '2026-01-05' },
-  { id: 'e2',  description: 'Factura luz',        amount: 75,  category: 'Suministros', date: '2026-01-15' },
-  { id: 'e3',  description: 'Factura gas',        amount: 50,  category: 'Suministros', date: '2026-01-18' },
-  { id: 'e4',  description: 'Internet',           amount: 25,  category: 'Suministros', date: '2026-01-22' },
-  { id: 'e5',  description: 'Alquiler febrero',   amount: 750, category: 'Alquiler',    date: '2026-02-05' },
-  { id: 'e6',  description: 'Factura luz',        amount: 70,  category: 'Suministros', date: '2026-02-14' },
-  { id: 'e7',  description: 'Factura gas',        amount: 45,  category: 'Suministros', date: '2026-02-18' },
-  { id: 'e8',  description: 'Internet',           amount: 25,  category: 'Suministros', date: '2026-02-22' },
-  { id: 'e9',  description: 'Limpieza hogar',     amount: 10,  category: 'Hogar',       date: '2026-02-28' },
-  { id: 'e10', description: 'Alquiler marzo',     amount: 750, category: 'Alquiler',    date: '2026-03-05' },
-  { id: 'e11', description: 'Factura luz',        amount: 80,  category: 'Suministros', date: '2026-03-14' },
-  { id: 'e12', description: 'Factura gas',        amount: 45,  category: 'Suministros', date: '2026-03-18' },
-  { id: 'e13', description: 'Internet',           amount: 25,  category: 'Suministros', date: '2026-03-22' },
-]
+// Mantener para backwards compat (ConjuntaView ya no lo usa directamente)
+export const CONJUNTA_MEMBERS: ConjuntaMember[] = []
 
 // ─── Calculations ─────────────────────────────────────────────────────────────
 

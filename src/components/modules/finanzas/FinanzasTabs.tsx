@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const TABS = [
-  { label: 'Gastos',      href: '/finanzas/gastos' },
-  { label: 'Conjunta',    href: '/finanzas/conjunta' },
-  { label: 'Inversiones', href: '/finanzas/inversiones' },
-  { label: 'Patrimonio',  href: '/finanzas/patrimonio' },
-  { label: 'Deudas',      href: '/finanzas/deudas' },
+  { label: 'Resumen',     href: '/finanzas',            exact: true },
+  { label: 'Gastos',      href: '/finanzas/gastos',     exact: false },
+  { label: 'Conjunta',    href: '/finanzas/conjunta',   exact: false },
+  { label: 'Inversiones', href: '/finanzas/inversiones',exact: false },
+  { label: 'Patrimonio',  href: '/finanzas/patrimonio', exact: false },
+  { label: 'Deudas',      href: '/finanzas/deudas',     exact: false },
 ]
 
 export function FinanzasTabs() {
@@ -22,7 +23,9 @@ export function FinanzasTabs() {
     >
       <nav className="flex gap-0 px-6 min-w-max">
         {TABS.map((tab) => {
-          const active = pathname.startsWith(tab.href)
+          const active = tab.exact
+            ? pathname === tab.href
+            : pathname.startsWith(tab.href)
           return (
             <Link
               key={tab.href}

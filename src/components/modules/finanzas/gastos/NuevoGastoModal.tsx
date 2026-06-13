@@ -10,7 +10,7 @@ import {
   type GastoCategory,
   type RecurringFrequency,
 } from '@/lib/gasto'
-import { APP_USERS, CURRENT_USER_ID } from '@/lib/users'
+import { useUsers } from '@/lib/users'
 import { usePatrimonio } from '@/contexts/patrimonioContext'
 
 interface Props {
@@ -19,28 +19,32 @@ interface Props {
   onClose: () => void
 }
 
-const TODAY = '2026-06-13'
+const TODAY = new Date().toISOString().split('T')[0]
 
 const FREQ_LABELS: Record<RecurringFrequency, string> = {
-  weekly: 'Semanal',
-  monthly: 'Mensual',
-  yearly: 'Anual',
+  weekly:    'Semanal',
+  monthly:   'Mensual',
+  bimonthly: 'Bimensual',
+  yearly:    'Anual',
 }
 
 function addPeriod(dateStr: string, freq: RecurringFrequency): string {
   const d = new Date(dateStr)
-  if (freq === 'weekly')  d.setDate(d.getDate() + 7)
-  if (freq === 'monthly') d.setMonth(d.getMonth() + 1)
-  if (freq === 'yearly')  d.setFullYear(d.getFullYear() + 1)
+  if (freq === 'weekly')    d.setDate(d.getDate() + 7)
+  if (freq === 'monthly')   d.setMonth(d.getMonth() + 1)
+  if (freq === 'bimonthly') d.setMonth(d.getMonth() + 2)
+  if (freq === 'yearly')    d.setFullYear(d.getFullYear() + 1)
   return d.toISOString().slice(0, 10)
 }
 
 export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
-  const isEdit = !!initialGasto
+  // empty id = duplicating (pre-filled but saves as new entry)
+  const isEdit = !!(initialGasto?.id)
   const { accounts } = usePatrimonio()
+  const { currentUser, allUsers } = useUsers()
 
   const userAccounts = accounts.filter(
-    (a) => a.isActive && (a.ownerId === CURRENT_USER_ID || a.type === 'conjunta')
+    (a) => a.isActive && (a.ownerId === currentUser.id || a.type === 'conjunta')
   )
 
   const defaultAccountId =
@@ -82,8 +86,8 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
   const netAmount = amountNum - tpTotal
 
   // Candidates for third-party: everyone NOT in the selected account's participants
-  const accountParticipants = selectedAccount?.participantIds ?? [CURRENT_USER_ID]
-  const tpCandidates = APP_USERS.filter((u) => !accountParticipants.includes(u.id))
+  const accountParticipants = selectedAccount?.participantIds ?? [currentUser.id]
+  const tpCandidates = allUsers.filter((u) => !accountParticipants.includes(u.id))
   const unusedCandidates = tpCandidates.filter(
     (u) => !thirdParty.some((tp) => tp.userId === u.id)
   )
@@ -127,7 +131,7 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
       amount: Math.round(amountNum * 100) / 100,
       category,
       date,
-      paidById: CURRENT_USER_ID,
+      paidById: currentUser.id,
       paidVia,
       accountId,
       notes: notes.trim() || undefined,
@@ -247,7 +251,7 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
             ) : (
               <div className="space-y-2">
                 {thirdParty.map((tp, i) => {
-                  const user = APP_USERS.find((u) => u.id === tp.userId)
+                  const user = allUsers.find((u) => u.id === tp.userId)
                   const availableForSlot = tpCandidates.filter(
                     (u) => u.id === tp.userId || !thirdParty.some((t, j) => j !== i && t.userId === u.id)
                   )
@@ -373,7 +377,7 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
             {isRecurring && (
               <div className="mt-2 p-3 bg-secondary/60 rounded-[10px] space-y-2">
                 <div className="flex gap-1">
-                  {(['weekly', 'monthly', 'yearly'] as RecurringFrequency[]).map((f) => (
+                  {(['weekly', 'monthly', 'bimonthly', 'yearly'] as RecurringFrequency[]).map((f) => (
                     <button
                       key={f}
                       onClick={() => handleFreqChange(f)}

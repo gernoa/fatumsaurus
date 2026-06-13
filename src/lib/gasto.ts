@@ -46,7 +46,7 @@ export interface GastoThirdParty {
  * - Third-party debts (if thirdParty.length > 0) — each entry is a debt
  *   from that user, split equally among conjunta members if paidVia === 'conjunta'
  */
-export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly'
+export type RecurringFrequency = 'weekly' | 'monthly' | 'bimonthly' | 'yearly'
 
 export interface GastoRecurring {
   frequency: RecurringFrequency
@@ -146,57 +146,6 @@ export function thirdPartyDebts(all: Gasto[]): ThirdPartyDebt[] {
 
 function round2(n: number) { return Math.round(n * 100) / 100 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
+// ─── Datos iniciales (vacíos — añade los tuyos desde la app) ────────────────────
 
-export const ALL_GASTOS: Gasto[] = [
-  // ── Personal — Junio ─────────────────────────────────────────────────────
-  { id: 'g1',  description: 'Supermercado',          amount: 67.40, category: 'alimentacion', date: '2026-06-13', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g2',  description: 'Farmacia',              amount: 23.50, category: 'salud',        date: '2026-06-12', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g3',  description: 'Gasolina',              amount: 58.00, category: 'transporte',   date: '2026-06-11', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g4',  description: 'Restaurante La Tasca',  amount: 24.50, category: 'alimentacion', date: '2026-06-10', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g5',  description: 'Spotify',               amount:  9.99, category: 'suscripcion',  date: '2026-06-09', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g6',  description: 'Café El Comercio',      amount:  4.20, category: 'alimentacion', date: '2026-06-08', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g7',  description: 'Netflix',               amount: 15.99, category: 'suscripcion',  date: '2026-06-05', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g8',  description: 'Zara',                  amount: 45.00, category: 'personal',     date: '2026-06-04', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g9',  description: 'Amazon — accesorios',   amount: 32.00, category: 'hogar',        date: '2026-06-02', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-
-  // ── Personal — Mayo ──────────────────────────────────────────────────────
-  { id: 'g10', description: 'Supermercado',           amount: 89.30, category: 'alimentacion', date: '2026-05-31', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g11', description: 'Gasolina',               amount: 62.00, category: 'transporte',   date: '2026-05-28', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g12', description: 'Clínica dental',         amount: 85.00, category: 'salud',        date: '2026-05-25', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g13', description: 'Restaurante cumpleaños', amount: 31.50, category: 'alimentacion', date: '2026-05-22', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g14', description: 'Ropa temporada',         amount: 68.00, category: 'personal',     date: '2026-05-20', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g15', description: 'Amazon — hogar',         amount: 24.50, category: 'hogar',        date: '2026-05-15', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g16', description: 'Café',                   amount:  3.80, category: 'alimentacion', date: '2026-05-12', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g17', description: 'Spotify',                amount:  9.99, category: 'suscripcion',  date: '2026-05-09', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g18', description: 'Netflix',                amount: 15.99, category: 'suscripcion',  date: '2026-05-05', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g19', description: 'Farmacia',               amount: 14.20, category: 'salud',        date: '2026-05-03', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-  { id: 'g20', description: 'Parking centro',         amount:  8.00, category: 'transporte',   date: '2026-05-01', paidById: 'ainhoa', paidVia: 'personal', thirdParty: [] },
-
-  // ── Conjunta — gastos del hogar ──────────────────────────────────────────
-  { id: 'e1',  description: 'Alquiler enero',    amount: 750, category: 'alquiler',    date: '2026-01-05', paidById: 'ainhoa', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e2',  description: 'Factura luz',        amount:  75, category: 'suministros', date: '2026-01-15', paidById: 'javier', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e3',  description: 'Factura gas',        amount:  50, category: 'suministros', date: '2026-01-18', paidById: 'javier', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e4',  description: 'Internet',           amount:  25, category: 'suministros', date: '2026-01-22', paidById: 'ainhoa', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e5',  description: 'Alquiler febrero',   amount: 750, category: 'alquiler',    date: '2026-02-05', paidById: 'javier', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e6',  description: 'Factura luz',        amount:  70, category: 'suministros', date: '2026-02-14', paidById: 'ainhoa', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e7',  description: 'Factura gas',        amount:  45, category: 'suministros', date: '2026-02-18', paidById: 'javier', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e8',  description: 'Internet',           amount:  25, category: 'suministros', date: '2026-02-22', paidById: 'ainhoa', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e9',  description: 'Limpieza hogar',     amount:  10, category: 'hogar',       date: '2026-02-28', paidById: 'ainhoa', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e10', description: 'Alquiler marzo',     amount: 750, category: 'alquiler',    date: '2026-03-05', paidById: 'javier', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e11', description: 'Factura luz',        amount:  80, category: 'suministros', date: '2026-03-14', paidById: 'ainhoa', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e12', description: 'Factura gas',        amount:  45, category: 'suministros', date: '2026-03-18', paidById: 'javier', paidVia: 'conjunta', thirdParty: [] },
-  { id: 'e13', description: 'Internet',           amount:  25, category: 'suministros', date: '2026-03-22', paidById: 'ainhoa', paidVia: 'conjunta', thirdParty: [] },
-
-  // ── EJEMPLO MIXTO: conjunta + parte para mamá ─────────────────────────────
-  {
-    id: 'mx1',
-    description: 'Mercadona (con compra de mamá)',
-    amount: 95.99,
-    category: 'alimentacion',
-    date: '2026-03-28',
-    paidById: 'ainhoa',
-    paidVia: 'conjunta',
-    thirdParty: [{ userId: 'madre', amount: 18.00 }],
-  },
-]
+export const ALL_GASTOS: Gasto[] = []
