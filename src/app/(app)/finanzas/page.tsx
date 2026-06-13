@@ -1,6 +1,5 @@
-import { Wallet } from 'lucide-react'
-import { ModulePageShell } from '@/components/layout/ModulePageShell'
+import { redirect } from 'next/navigation'
 
 export default function FinanzasPage() {
-  return <ModulePageShell title="Finanzas" icon={Wallet} />
+  redirect('/finanzas/tricount')
 }
