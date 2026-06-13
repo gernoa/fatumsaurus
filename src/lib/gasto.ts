@@ -54,6 +54,7 @@ export interface Gasto {
   category: GastoCategory
   paidById: string
   paidVia: PagoOrigen
+  accountId?: string   // which account was debited
   notes?: string
   thirdParty: GastoThirdParty[]
 }

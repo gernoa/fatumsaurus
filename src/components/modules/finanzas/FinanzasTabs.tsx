@@ -5,13 +5,12 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const TABS = [
-  { label: 'Gastos',      href: '/finanzas/gastos' },
-  { label: 'Tricount',    href: '/finanzas/tricount' },
-  { label: 'Conjunta',    href: '/finanzas/conjunta' },
-  { label: 'Inversiones', href: '/finanzas/inversiones' },
+  { label: 'Gastos',        href: '/finanzas/gastos' },
+  { label: 'Conjunta',      href: '/finanzas/conjunta' },
+  { label: 'Inversiones',   href: '/finanzas/inversiones' },
   { label: 'Suscripciones', href: '/finanzas/suscripciones' },
-  { label: 'Patrimonio',  href: '/finanzas/patrimonio' },
-  { label: 'Deudas',      href: '/finanzas/deudas' },
+  { label: 'Patrimonio',    href: '/finanzas/patrimonio' },
+  { label: 'Deudas',        href: '/finanzas/deudas' },
 ]
 
 export function FinanzasTabs() {

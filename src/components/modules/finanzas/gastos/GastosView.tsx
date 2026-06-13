@@ -38,6 +38,7 @@ export function GastosView() {
   const [year, setYear] = useState(2026)
   const [month, setMonth] = useState(6)
   const [showModal, setShowModal] = useState(false)
+  const [editingGasto, setEditingGasto] = useState<Gasto | undefined>(undefined)
 
   const monthGastos = useMemo(() => filterByMonth(gastos, year, month), [gastos, year, month])
   const thisTotal   = useMemo(() => totalAmount(monthGastos), [monthGastos])
@@ -58,13 +59,27 @@ export function GastosView() {
     if (month === 12) { setMonth(1); setYear(y => y + 1) } else setMonth(m => m + 1)
   }
 
-  const handleAddGasto = (g: Gasto) => {
+  const handleSaveGasto = (g: Gasto) => {
+    const wasEditing = !!editingGasto
     setShowModal(false)
+    setEditingGasto(undefined)
+
     if (g.paidVia === 'personal') {
-      setGastos(prev => [g, ...prev])
+      if (wasEditing) {
+        setGastos(prev => prev.map(existing => existing.id === g.id ? g : existing))
+        toast.success('Gasto actualizado')
+      } else {
+        setGastos(prev => [g, ...prev])
+        toast.success('Gasto guardado')
+      }
     } else {
-      toast.success('Gasto conjunta registrado')
+      toast.success(wasEditing ? 'Gasto conjunta actualizado' : 'Gasto conjunta registrado')
     }
+  }
+
+  const handleEditGasto = (g: Gasto) => {
+    setEditingGasto(g)
+    setShowModal(true)
   }
 
   // Top categories (those with spend > 0, sorted desc)
@@ -175,6 +190,7 @@ export function GastosView() {
                   return (
                     <div
                       key={g.id}
+                      onClick={() => handleEditGasto(g)}
                       className="flex items-center gap-3 bg-card rounded-[12px] border border-border px-4 py-3 shadow-[0_1px_8px_rgba(0,18,25,0.05)] hover:shadow-[0_2px_12px_rgba(0,18,25,0.09)] transition-shadow cursor-pointer"
                     >
                       <div className={cn('w-2 h-2 rounded-full flex-shrink-0', cat.dotClass)} />
@@ -202,7 +218,11 @@ export function GastosView() {
       </div>
 
       {showModal && (
-        <NuevoGastoModal onSave={handleAddGasto} onClose={() => setShowModal(false)} />
+        <NuevoGastoModal
+          initialGasto={editingGasto}
+          onSave={handleSaveGasto}
+          onClose={() => { setShowModal(false); setEditingGasto(undefined) }}
+        />
       )}
     </>
   )
