@@ -1,30 +1,37 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ArrowDownLeft, ArrowUpRight, Plus, TrendingDown } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, Plus, TrendingDown, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDateShort } from '@/lib/format'
 import {
   CONJUNTA_MEMBERS,
+  MOCK_DEPOSITS,
   CURRENT_USER_ID,
-  CATEGORY_COLORS,
-  accountBalance,
-  totalDeposited,
-  totalExpenses,
-  depositedBy,
-  calculateConjuntaBalances,
-  allTransactions,
-  type ConjuntaTransaction,
+  type ConjuntaDeposit,
 } from '@/lib/mock-conjunta'
+import {
+  ALL_GASTOS,
+  conjuntaGastos,
+  netAmount,
+  thirdPartyDebts,
+  getCategoryMeta,
+  type Gasto,
+} from '@/lib/gasto'
+import { getUser } from '@/lib/users'
 
 type Filter = 'todos' | 'ingresos' | 'gastos'
+
+type ConjuntaTx =
+  | { kind: 'deposit'; date: string; data: ConjuntaDeposit }
+  | { kind: 'gasto';   date: string; data: Gasto }
 
 function monthLabel(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
 }
 
 function getMemberName(userId: string) {
-  return CONJUNTA_MEMBERS.find((m) => m.id === userId)?.name ?? userId
+  return CONJUNTA_MEMBERS.find((m) => m.id === userId)?.name ?? getUser(userId).name
 }
 
 function MemberAvatar({ userId }: { userId: string }) {
@@ -36,33 +43,54 @@ function MemberAvatar({ userId }: { userId: string }) {
   )
 }
 
+function r2(n: number) { return Math.round(n * 100) / 100 }
+
 export function ConjuntaView() {
   const [filter, setFilter] = useState<Filter>('todos')
 
-  const balances = calculateConjuntaBalances()
-  const myBalance = balances.find((b) => b.userId === CURRENT_USER_ID)!
-  const theirBalance = balances.find((b) => b.userId !== CURRENT_USER_ID)!
-  const theirName = getMemberName(theirBalance.userId)
-  const balance = accountBalance()
+  // — Data from unified model —
+  const cGastos = useMemo(() => conjuntaGastos(ALL_GASTOS), [])
+  const debts    = useMemo(() => thirdPartyDebts(ALL_GASTOS), [])
 
-  const transactions = useMemo(() => {
-    const all = allTransactions()
-    if (filter === 'ingresos') return all.filter((t) => t.kind === 'deposit')
-    if (filter === 'gastos') return all.filter((t) => t.kind === 'expense')
-    return all
-  }, [filter])
+  // — Totals —
+  const totalDep   = MOCK_DEPOSITS.reduce((s, d) => s + d.amount, 0)
+  const grossSpent = cGastos.reduce((s, g) => s + g.amount, 0)
+  const netSpent   = cGastos.reduce((s, g) => s + netAmount(g), 0)
+  const accBalance = r2(totalDep - grossSpent)
+  const fairShare  = r2(netSpent / CONJUNTA_MEMBERS.length)
+
+  // — Per-member balances —
+  const balances = CONJUNTA_MEMBERS.map((m) => {
+    const deposited = MOCK_DEPOSITS
+      .filter((d) => d.userId === m.id)
+      .reduce((s, d) => s + d.amount, 0)
+    return { userId: m.id, deposited, fairShare, net: r2(deposited - fairShare) }
+  })
+
+  const myBalance   = balances.find((b) => b.userId === CURRENT_USER_ID)!
+  const theirBalance = balances.find((b) => b.userId !== CURRENT_USER_ID)!
+  const theirName   = getMemberName(theirBalance.userId)
+
+  // — Transaction list —
+  const allTxs = useMemo((): ConjuntaTx[] => {
+    const deps: ConjuntaTx[] = MOCK_DEPOSITS.map((d) => ({ kind: 'deposit', date: d.date, data: d }))
+    const gas: ConjuntaTx[]  = cGastos.map((g) => ({ kind: 'gasto', date: g.date, data: g }))
+    let combined = [...deps, ...gas].sort((a, b) => b.date.localeCompare(a.date))
+    if (filter === 'ingresos') combined = combined.filter((t) => t.kind === 'deposit')
+    if (filter === 'gastos')   combined = combined.filter((t) => t.kind === 'gasto')
+    return combined
+  }, [cGastos, filter])
 
   // Group by month
   const grouped = useMemo(() => {
-    const map = new Map<string, ConjuntaTransaction[]>()
-    for (const t of transactions) {
-      const date = t.kind === 'deposit' ? t.data.date : t.data.date
-      const key = date.slice(0, 7) // YYYY-MM
+    const map = new Map<string, ConjuntaTx[]>()
+    for (const t of allTxs) {
+      const key = t.date.slice(0, 7)
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(t)
     }
     return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]))
-  }, [transactions])
+  }, [allTxs])
 
   return (
     <div className="px-6 pt-4 pb-6 space-y-4">
@@ -70,22 +98,25 @@ export function ConjuntaView() {
       {/* Account balance card */}
       <div className="bg-petroleo rounded-[16px] p-5 text-white">
         <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-1">Saldo en cuenta</p>
-        <p className="text-3xl font-bold tracking-tight">{formatCurrency(balance)}</p>
-        <div className="flex items-center gap-6 mt-4 pt-4 border-t border-white/15">
+        <p className="text-3xl font-bold tracking-tight">{formatCurrency(accBalance)}</p>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-4 pt-4 border-t border-white/15">
           <div>
             <p className="text-[11px] text-white/60 mb-0.5">Ingresado</p>
-            <p className="text-sm font-semibold">{formatCurrency(totalDeposited())}</p>
+            <p className="text-sm font-semibold">{formatCurrency(totalDep)}</p>
           </div>
           <div>
             <p className="text-[11px] text-white/60 mb-0.5">Gastado</p>
-            <p className="text-sm font-semibold">{formatCurrency(totalExpenses())}</p>
+            <p className="text-sm font-semibold">{formatCurrency(grossSpent)}</p>
           </div>
-          {CONJUNTA_MEMBERS.map((m) => (
-            <div key={m.id}>
-              <p className="text-[11px] text-white/60 mb-0.5">Ingresó {m.name}</p>
-              <p className="text-sm font-semibold">{formatCurrency(depositedBy(m.id))}</p>
-            </div>
-          ))}
+          {CONJUNTA_MEMBERS.map((m) => {
+            const dep = MOCK_DEPOSITS.filter((d) => d.userId === m.id).reduce((s, d) => s + d.amount, 0)
+            return (
+              <div key={m.id}>
+                <p className="text-[11px] text-white/60 mb-0.5">Ingresó {m.name}</p>
+                <p className="text-sm font-semibold">{formatCurrency(dep)}</p>
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -158,6 +189,41 @@ export function ConjuntaView() {
         </div>
       </div>
 
+      {/* Deudas de terceros */}
+      {debts.length > 0 && (
+        <div className="bg-ambar/8 border border-ambar/25 rounded-[16px] overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-ambar/20">
+            <AlertCircle className="w-4 h-4 text-ambar flex-shrink-0" />
+            <p className="text-xs font-semibold text-ambar uppercase tracking-wide">
+              Deudas pendientes de terceros
+            </p>
+          </div>
+          <div className="divide-y divide-ambar/15">
+            {Object.entries(
+              debts.reduce<Record<string, number>>((acc, d) => {
+                acc[d.userId] = r2((acc[d.userId] ?? 0) + d.totalOwed)
+                return acc
+              }, {})
+            ).map(([userId, total]) => (
+              <div key={userId} className="flex items-center gap-3 px-4 py-3">
+                <div className="w-7 h-7 rounded-full bg-ambar/20 text-ambar text-[11px] font-semibold flex items-center justify-center flex-shrink-0">
+                  {getUser(userId).initial}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">{getUser(userId).name}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {formatCurrency(r2(total / CONJUNTA_MEMBERS.length))} a cada miembro
+                  </p>
+                </div>
+                <p className="text-sm font-bold text-ambar flex-shrink-0">
+                  {formatCurrency(total)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Transaction list */}
       <div className="space-y-3">
         {/* Filter + action row */}
@@ -214,32 +280,37 @@ export function ConjuntaView() {
                   </div>
                 )
               } else {
-                const e = t.data
-                const perPerson = e.amount / CONJUNTA_MEMBERS.length
+                const g = t.data
+                const cat = getCategoryMeta(g.category)
+                const net = netAmount(g)
+                const perPerson = r2(net / CONJUNTA_MEMBERS.length)
+                const hasThirdParty = g.thirdParty.length > 0
                 return (
                   <div
-                    key={e.id}
+                    key={g.id}
                     className="flex items-center gap-3 bg-card rounded-[12px] border border-border px-4 py-3 shadow-[0_1px_8px_rgba(0,18,25,0.05)]"
                   >
                     <div className="w-8 h-8 rounded-full bg-rojo-tierra/10 flex items-center justify-center flex-shrink-0">
                       <ArrowUpRight className="w-4 h-4 text-rojo-tierra" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{e.description}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span
-                          className={cn(
-                            'text-[10px] font-medium px-1.5 py-0.5 rounded-full',
-                            CATEGORY_COLORS[e.category]
-                          )}
-                        >
-                          {e.category}
+                      <p className="text-sm font-medium text-foreground truncate">{g.description}</p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', cat.colorClass)}>
+                          {cat.label}
                         </span>
-                        <span className="text-[11px] text-muted-foreground">{formatDateShort(e.date)}</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {getMemberName(g.paidById)} · {formatDateShort(g.date)}
+                        </span>
+                        {hasThirdParty && (
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-ambar/15 text-ambar">
+                            incl. deuda {g.thirdParty.map((tp) => getUser(tp.userId).name).join(', ')}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-semibold text-foreground">{formatCurrency(e.amount)}</p>
+                      <p className="text-sm font-semibold text-foreground">{formatCurrency(net)}</p>
                       <p className="text-[11px] text-muted-foreground">{formatCurrency(perPerson)} / c/u</p>
                     </div>
                   </div>

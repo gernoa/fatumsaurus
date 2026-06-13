@@ -1,16 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Plus, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { GASTO_CATEGORIES, type GastoPersonal, type GastoCategory } from '@/lib/mock-gastos'
+import { formatCurrency } from '@/lib/format'
+import { GASTO_CATEGORIES, type Gasto, type GastoCategory } from '@/lib/gasto'
+import { APP_USERS, CONJUNTA_MEMBER_IDS, CURRENT_USER_ID } from '@/lib/users'
 
 interface Props {
-  onSave: (gasto: GastoPersonal) => void
+  onSave: (gasto: Gasto) => void
   onClose: () => void
 }
 
-const TODAY = '2026-06-13' // mock today
+const TODAY = '2026-06-13'
+
+const EXTERNAL_USERS = APP_USERS.filter((u) => !CONJUNTA_MEMBER_IDS.includes(u.id))
 
 export function NuevoGastoModal({ onSave, onClose }: Props) {
   const [amount, setAmount] = useState('')
@@ -18,20 +22,55 @@ export function NuevoGastoModal({ onSave, onClose }: Props) {
   const [category, setCategory] = useState<GastoCategory | null>(null)
   const [date, setDate] = useState(TODAY)
   const [notes, setNotes] = useState('')
+  const [paidVia, setPaidVia] = useState<'personal' | 'conjunta'>('personal')
+  const [thirdParty, setThirdParty] = useState<{ userId: string; amount: string }[]>([])
   const [error, setError] = useState('')
 
+  const amountNum = parseFloat(amount) || 0
+  const tpTotal = thirdParty.reduce((s, tp) => s + (parseFloat(tp.amount) || 0), 0)
+  const netConjunta = amountNum - tpTotal
+  const unusedExternal = EXTERNAL_USERS.filter(
+    (u) => !thirdParty.some((tp) => tp.userId === u.id)
+  )
+
+  function addThirdParty() {
+    if (unusedExternal.length === 0) return
+    setThirdParty((prev) => [...prev, { userId: unusedExternal[0].id, amount: '' }])
+  }
+
+  function removeThirdParty(i: number) {
+    setThirdParty((prev) => prev.filter((_, idx) => idx !== i))
+  }
+
+  function updateThirdParty(i: number, field: 'userId' | 'amount', value: string) {
+    setThirdParty((prev) => prev.map((tp, idx) => idx === i ? { ...tp, [field]: value } : tp))
+  }
+
   const handleSave = () => {
-    if (!amount || isNaN(parseFloat(amount))) { setError('Introduce un importe válido'); return }
+    if (!amount || isNaN(amountNum) || amountNum <= 0) {
+      setError('Introduce un importe válido'); return
+    }
     if (!description.trim()) { setError('Añade una descripción'); return }
     if (!category) { setError('Selecciona una categoría'); return }
+    if (paidVia === 'conjunta' && tpTotal > 0 && netConjunta < 0) {
+      setError('La parte de terceros no puede superar el total'); return
+    }
 
     onSave({
       id: `g-${Date.now()}`,
       description: description.trim(),
-      amount: Math.round(parseFloat(amount) * 100) / 100,
+      amount: Math.round(amountNum * 100) / 100,
       category,
       date,
+      paidById: CURRENT_USER_ID,
+      paidVia,
       notes: notes.trim() || undefined,
+      thirdParty: thirdParty
+        .filter((tp) => parseFloat(tp.amount) > 0)
+        .map((tp) => ({
+          userId: tp.userId,
+          amount: Math.round(parseFloat(tp.amount) * 100) / 100,
+        })),
     })
   }
 
@@ -65,7 +104,7 @@ export function NuevoGastoModal({ onSave, onClose }: Props) {
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="px-5 py-4 space-y-4 max-h-[75vh] overflow-y-auto">
           {/* Amount */}
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">
@@ -86,6 +125,119 @@ export function NuevoGastoModal({ onSave, onClose }: Props) {
               />
             </div>
           </div>
+
+          {/* Paid via toggle */}
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">
+              Pagado con
+            </label>
+            <div className="flex gap-1 p-1 bg-secondary rounded-[10px]">
+              {(['personal', 'conjunta'] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => {
+                    setPaidVia(v)
+                    if (v === 'personal') setThirdParty([])
+                  }}
+                  className={cn(
+                    'flex-1 py-2 text-sm font-medium rounded-[8px] transition-colors',
+                    paidVia === v
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {v === 'personal' ? 'Mi cuenta' : 'Cuenta conjunta'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Third-party section — conjunta only */}
+          {paidVia === 'conjunta' && (
+            <div className="bg-secondary/70 rounded-[12px] p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Parte de terceros
+                </p>
+                {unusedExternal.length > 0 && (
+                  <button
+                    onClick={addThirdParty}
+                    className="flex items-center gap-1 text-xs font-medium text-petroleo hover:text-teal-brand transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Añadir persona
+                  </button>
+                )}
+              </div>
+
+              {thirdParty.length === 0 ? (
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  ¿Parte del gasto es para alguien de fuera de la cuenta?
+                  Añade su porción — el neto lo asume la cuenta conjunta.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {thirdParty.map((tp, i) => {
+                    const user = APP_USERS.find((u) => u.id === tp.userId)
+                    const availableForSlot = EXTERNAL_USERS.filter(
+                      (u) => u.id === tp.userId || !thirdParty.some((t, j) => j !== i && t.userId === u.id)
+                    )
+                    return (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-petroleo text-white text-[11px] font-semibold flex items-center justify-center flex-shrink-0">
+                          {user?.initial ?? '?'}
+                        </div>
+                        {availableForSlot.length > 1 ? (
+                          <select
+                            value={tp.userId}
+                            onChange={(e) => updateThirdParty(i, 'userId', e.target.value)}
+                            className="flex-1 px-2.5 py-1.5 text-sm text-foreground bg-card rounded-[8px] border border-border focus:outline-none focus:border-ring"
+                          >
+                            {availableForSlot.map((u) => (
+                              <option key={u.id} value={u.id}>{u.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="flex-1 text-sm font-medium text-foreground">{user?.name}</span>
+                        )}
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">€</span>
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.01"
+                            min="0"
+                            placeholder="0,00"
+                            value={tp.amount}
+                            onChange={(e) => updateThirdParty(i, 'amount', e.target.value)}
+                            className="w-full pl-6 pr-2 py-1.5 text-sm font-semibold text-foreground bg-card rounded-[8px] border border-border focus:outline-none focus:border-ring"
+                          />
+                        </div>
+                        <button
+                          onClick={() => removeThirdParty(i)}
+                          className="p-1 text-muted-foreground hover:text-rojo-tierra transition-colors flex-shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {amountNum > 0 && tpTotal > 0 && (
+                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                  <span className="text-xs text-muted-foreground">Neto cuenta conjunta</span>
+                  <span className={cn(
+                    'text-sm font-bold',
+                    netConjunta < 0 ? 'text-rojo-tierra' : 'text-petroleo'
+                  )}>
+                    {formatCurrency(Math.max(0, netConjunta))}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Description */}
           <div>

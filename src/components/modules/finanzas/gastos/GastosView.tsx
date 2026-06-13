@@ -2,18 +2,20 @@
 
 import { useState, useMemo } from 'react'
 import { ChevronLeft, ChevronRight, Plus, TrendingDown, TrendingUp } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatDateShort } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 import {
-  MOCK_GASTOS,
+  ALL_GASTOS,
   GASTO_CATEGORIES,
   getCategoryMeta,
+  personalGastos,
   filterByMonth,
-  totalForMonth,
+  totalAmount,
   categoryTotals,
   groupByDate,
-  type GastoPersonal,
-} from '@/lib/mock-gastos'
+  type Gasto,
+} from '@/lib/gasto'
 import { NuevoGastoModal } from './NuevoGastoModal'
 
 const MONTHS = [
@@ -32,18 +34,18 @@ function dayLabel(dateStr: string): string {
 }
 
 export function GastosView() {
-  const [gastos, setGastos] = useState<GastoPersonal[]>(MOCK_GASTOS)
+  const [gastos, setGastos] = useState<Gasto[]>(() => personalGastos(ALL_GASTOS))
   const [year, setYear] = useState(2026)
-  const [month, setMonth] = useState(6) // June
+  const [month, setMonth] = useState(6)
   const [showModal, setShowModal] = useState(false)
 
   const monthGastos = useMemo(() => filterByMonth(gastos, year, month), [gastos, year, month])
-  const thisTotal = useMemo(() => totalForMonth(gastos, year, month), [gastos, year, month])
+  const thisTotal   = useMemo(() => totalAmount(monthGastos), [monthGastos])
 
-  // Previous month for comparison
   const prevMonth = month === 1 ? 12 : month - 1
   const prevYear  = month === 1 ? year - 1 : year
-  const prevTotal = useMemo(() => totalForMonth(gastos, prevYear, prevMonth), [gastos, prevYear, prevMonth])
+  const prevMonthGastos = useMemo(() => filterByMonth(gastos, prevYear, prevMonth), [gastos, prevYear, prevMonth])
+  const prevTotal = useMemo(() => totalAmount(prevMonthGastos), [prevMonthGastos])
 
   const trendPct = prevTotal > 0 ? ((thisTotal - prevTotal) / prevTotal) * 100 : null
   const catTotals = useMemo(() => categoryTotals(monthGastos), [monthGastos])
@@ -56,9 +58,13 @@ export function GastosView() {
     if (month === 12) { setMonth(1); setYear(y => y + 1) } else setMonth(m => m + 1)
   }
 
-  const handleAddGasto = (g: GastoPersonal) => {
-    setGastos(prev => [g, ...prev])
+  const handleAddGasto = (g: Gasto) => {
     setShowModal(false)
+    if (g.paidVia === 'personal') {
+      setGastos(prev => [g, ...prev])
+    } else {
+      toast.success('Gasto conjunta registrado')
+    }
   }
 
   // Top categories (those with spend > 0, sorted desc)
