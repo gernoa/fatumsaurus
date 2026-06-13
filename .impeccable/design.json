@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-13T00:00:00Z",
+  "title": "Design System: Fatumsaurus",
+  "extensions": {
+    "colorMeta": {
+      "noche-marina": {
+        "role": "neutral",
+        "displayName": "Noche Marina",
+        "canonical": "oklch(0.10 0.03 209)",
+        "tonalRamp": ["oklch(0.10 0.03 209)", "oklch(0.18 0.03 209)", "oklch(0.26 0.03 209)", "oklch(0.36 0.03 209)", "oklch(0.50 0.03 209)", "oklch(0.65 0.03 209)", "oklch(0.80 0.03 209)", "oklch(0.93 0.03 209)"]
+      },
+      "petroleo": {
+        "role": "primary",
+        "displayName": "Petróleo",
+        "canonical": "oklch(0.37 0.08 209)",
+        "tonalRamp": ["oklch(0.15 0.08 209)", "oklch(0.25 0.08 209)", "oklch(0.37 0.08 209)", "oklch(0.48 0.08 209)", "oklch(0.60 0.08 209)", "oklch(0.72 0.08 209)", "oklch(0.85 0.08 209)", "oklch(0.94 0.08 209)"]
+      },
+      "teal": {
+        "role": "tertiary",
+        "displayName": "Teal",
+        "canonical": "oklch(0.58 0.105 192)",
+        "tonalRamp": ["oklch(0.15 0.105 192)", "oklch(0.27 0.105 192)", "oklch(0.40 0.105 192)", "oklch(0.58 0.105 192)", "oklch(0.68 0.105 192)", "oklch(0.78 0.105 192)", "oklch(0.88 0.105 192)", "oklch(0.95 0.105 192)"]
+      },
+      "arena": {
+        "role": "neutral",
+        "displayName": "Arena",
+        "canonical": "oklch(0.87 0.05 76)",
+        "tonalRamp": ["oklch(0.18 0.05 76)", "oklch(0.30 0.05 76)", "oklch(0.44 0.05 76)", "oklch(0.58 0.05 76)", "oklch(0.72 0.05 76)", "oklch(0.80 0.05 76)", "oklch(0.87 0.05 76)", "oklch(0.95 0.05 76)"]
+      },
+      "crema": {
+        "role": "neutral",
+        "displayName": "Crema",
+        "canonical": "oklch(0.93 0.03 76)",
+        "tonalRamp": ["oklch(0.20 0.03 76)", "oklch(0.35 0.03 76)", "oklch(0.50 0.03 76)", "oklch(0.65 0.03 76)", "oklch(0.78 0.03 76)", "oklch(0.87 0.03 76)", "oklch(0.93 0.03 76)", "oklch(0.97 0.03 76)"]
+      },
+      "header-surface": {
+        "role": "neutral",
+        "displayName": "Header Surface",
+        "canonical": "oklch(0.895 0.025 76)",
+        "tonalRamp": ["oklch(0.25 0.025 76)", "oklch(0.40 0.025 76)", "oklch(0.55 0.025 76)", "oklch(0.68 0.025 76)", "oklch(0.78 0.025 76)", "oklch(0.87 0.025 76)", "oklch(0.895 0.025 76)", "oklch(0.96 0.025 76)"]
+      },
+      "ambar": {
+        "role": "secondary",
+        "displayName": "Ámbar",
+        "canonical": "oklch(0.72 0.17 67)",
+        "tonalRamp": ["oklch(0.15 0.17 67)", "oklch(0.28 0.17 67)", "oklch(0.42 0.17 67)", "oklch(0.56 0.17 67)", "oklch(0.72 0.17 67)", "oklch(0.82 0.17 67)", "oklch(0.90 0.17 67)", "oklch(0.96 0.17 67)"]
+      },
+      "rojo-tierra": {
+        "role": "destructive",
+        "displayName": "Rojo Tierra",
+        "canonical": "oklch(0.44 0.185 27)",
+        "tonalRamp": ["oklch(0.15 0.185 27)", "oklch(0.27 0.185 27)", "oklch(0.44 0.185 27)", "oklch(0.55 0.185 27)", "oklch(0.65 0.185 27)", "oklch(0.76 0.185 27)", "oklch(0.87 0.185 27)", "oklch(0.95 0.185 27)"]
+      },
+      "texto-secundario": {
+        "role": "neutral",
+        "displayName": "Texto Secundario",
+        "canonical": "oklch(0.40 0.038 215)",
+        "tonalRamp": ["oklch(0.15 0.038 215)", "oklch(0.25 0.038 215)", "oklch(0.40 0.038 215)", "oklch(0.52 0.038 215)", "oklch(0.65 0.038 215)", "oklch(0.76 0.038 215)", "oklch(0.87 0.038 215)", "oklch(0.95 0.038 215)"]
+      },
+      "menta": {
+        "role": "tertiary",
+        "displayName": "Menta",
+        "canonical": "oklch(0.81 0.066 182)",
+        "tonalRamp": ["oklch(0.18 0.066 182)", "oklch(0.30 0.066 182)", "oklch(0.44 0.066 182)", "oklch(0.58 0.066 182)", "oklch(0.70 0.066 182)", "oklch(0.81 0.066 182)", "oklch(0.90 0.066 182)", "oklch(0.96 0.066 182)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Títulos de módulo en el header sticky. Una sola aparición por pantalla." },
+      "headline": { "displayName": "Headline", "purpose": "Encabezados de sección, títulos de cards, nombres de items en listas." },
+      "title": { "displayName": "Title", "purpose": "Items de navegación, tabs, labels en formularios complejos." },
+      "body": { "displayName": "Body", "purpose": "Contenido general, descripciones, notas, valores. Máx 65–75ch en prosa." },
+      "label": { "displayName": "Label", "purpose": "Metadatos, timestamps, badges, etiquetas de campo." }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 2px 12px rgba(0, 18, 25, 0.08)", "purpose": "Cards en estado neutro. Casi imperceptible — delimita sin pesar." },
+      { "name": "card-hover", "value": "0 4px 20px rgba(0, 18, 25, 0.12)", "purpose": "Cards en hover. Acompaña a translateY(-1px). Indica interactividad." },
+      { "name": "focus-ring-primary", "value": "0 0 0 3px rgba(0, 95, 115, 0.12)", "purpose": "Inputs y botones enfocados. Color Petróleo con opacidad. WCAG AA." },
+      { "name": "focus-ring-danger", "value": "0 0 0 3px rgba(174, 32, 18, 0.12)", "purpose": "Inputs en estado de error enfocados." },
+      { "name": "modal-backdrop", "value": "backdrop-filter: blur(8px)", "purpose": "Modales y drawers. Sobre fondo rgba(0,18,25,0.4)." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Transiciones de estado estándar. Botones, hover, focus." },
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Entradas de modales, drawers, panels. Arranque rápido, final suave." },
+      { "name": "duration-micro", "value": "150ms", "purpose": "Micro-interacciones: hover, focus, estados de botón." },
+      { "name": "duration-standard", "value": "250ms", "purpose": "Transiciones de panel, drawers, modales." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px", "purpose": "Mobile breakpoint. Sidebar → bottom nav." },
+      { "name": "lg", "value": "1024px", "purpose": "Desktop. Sidebar expandido visible." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de la pantalla. Fondo Petróleo, texto blanco, radius 12px.",
+      "html": "<button class=\"ds-btn-primary\">Guardar</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #005F73; color: #FFFFFF; padding: 10px 20px; border-radius: 12px; font-family: 'Poppins', system-ui, sans-serif; font-size: 14px; font-weight: 600; line-height: 1.4; border: none; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), transform 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1); outline: none; } .ds-btn-primary:hover { background: #0A9396; transform: translateY(-1px); } .ds-btn-primary:active { background: #005F73; transform: translateY(0); } .ds-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(0,95,115,0.3); } .ds-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Acción secundaria. Borde Petróleo, hover rellena el botón.",
+      "html": "<button class=\"ds-btn-ghost\">Cancelar</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: transparent; color: #005F73; padding: 10px 20px; border-radius: 12px; border: 1.5px solid #005F73; font-family: 'Poppins', system-ui, sans-serif; font-size: 14px; font-weight: 600; line-height: 1.4; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); outline: none; } .ds-btn-ghost:hover { background: #005F73; color: #FFFFFF; } .ds-btn-ghost:focus-visible { box-shadow: 0 0 0 3px rgba(0,95,115,0.2); } .ds-btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Acciones irreversibles. Rojo Tierra. Usar con diálogo de confirmación.",
+      "html": "<button class=\"ds-btn-destructive\">Eliminar</button>",
+      "css": ".ds-btn-destructive { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #AE2012; color: #FFFFFF; padding: 10px 20px; border-radius: 12px; font-family: 'Poppins', system-ui, sans-serif; font-size: 14px; font-weight: 600; line-height: 1.4; border: none; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1); outline: none; } .ds-btn-destructive:hover { background: #8B1A0E; } .ds-btn-destructive:focus-visible { box-shadow: 0 0 0 3px rgba(174,32,18,0.25); } .ds-btn-destructive:disabled { opacity: 0.45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "button-ghost",
+      "description": "Campo de texto estándar. Borde Arena, focus Petróleo.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"ds-inp\">Concepto</label><input class=\"ds-input\" id=\"ds-inp\" type=\"text\" placeholder=\"Escribe aquí...\"></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-label { font-family: 'Poppins', system-ui, sans-serif; font-size: 12px; font-weight: 500; line-height: 1.2; color: #001219; letter-spacing: 0.01em; } .ds-input { background: #FFFFFF; border: 1.5px solid #E9D8A6; border-radius: 8px; padding: 10px 14px; font-family: 'Poppins', system-ui, sans-serif; font-size: 14px; font-weight: 400; color: #001219; line-height: 1.4; width: 100%; box-sizing: border-box; outline: none; transition: border-color 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-input::placeholder { color: #4A6070; } .ds-input:hover:not(:focus) { border-color: #0A9396; } .ds-input:focus { border-color: #005F73; box-shadow: 0 0 0 3px rgba(0,95,115,0.12); } .ds-input:disabled { opacity: 0.5; cursor: not-allowed; background: #E9D8A6; }"
+    },
+    {
+      "name": "Chip / Badge",
+      "kind": "chip",
+      "refersTo": "chip-default",
+      "description": "Etiquetas de estado y categoría. Tres variantes: default, warning, danger.",
+      "html": "<div class=\"ds-chips\"><span class=\"ds-chip\">Activo</span><span class=\"ds-chip ds-chip-warning\">Pendiente</span><span class=\"ds-chip ds-chip-danger\">Urgente</span></div>",
+      "css": ".ds-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; } .ds-chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 9999px; font-family: 'Poppins', system-ui, sans-serif; font-size: 12px; font-weight: 500; line-height: 1.2; background: #E9D8A6; color: #001219; } .ds-chip-warning { background: rgba(238,155,0,0.15); color: #7A5000; } .ds-chip-danger { background: rgba(174,32,18,0.12); color: #7A1A10; }"
+    },
+    {
+      "name": "Module Card",
+      "kind": "card",
+      "refersTo": "button-primary",
+      "description": "Card de resumen de módulo para el dashboard. Icono coloreado + título + valor.",
+      "html": "<div class=\"ds-mcard\"><div class=\"ds-mcard-icon\" style=\"background:#005F73;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"white\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/></svg></div><div class=\"ds-mcard-body\"><p class=\"ds-mcard-title\">Calendario</p><p class=\"ds-mcard-value\">3 eventos hoy</p></div></div>",
+      "css": ".ds-mcard { display: flex; align-items: center; gap: 14px; background: #FFFFFF; border-radius: 16px; padding: 16px; box-shadow: 0 2px 12px rgba(0,18,25,0.08); border: 1px solid #E9D8A6; transition: box-shadow 150ms cubic-bezier(0.4,0,0.2,1), transform 150ms cubic-bezier(0.4,0,0.2,1); cursor: pointer; text-decoration: none; } .ds-mcard:hover { box-shadow: 0 4px 20px rgba(0,18,25,0.12); transform: translateY(-1px); } .ds-mcard-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; } .ds-mcard-body { display: flex; flex-direction: column; gap: 2px; } .ds-mcard-title { font-family: 'Poppins', system-ui, sans-serif; font-size: 14px; font-weight: 600; color: #001219; margin: 0; line-height: 1.3; } .ds-mcard-value { font-family: 'Poppins', system-ui, sans-serif; font-size: 12px; font-weight: 400; color: #4A6070; margin: 0; line-height: 1.2; }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "button-primary",
+      "description": "Sidebar en Noche Marina con items de módulo. Estados default, hover, activo.",
+      "html": "<nav class=\"ds-sidebar\"><div class=\"ds-sidebar-brand\">FATUMSAURUS</div><a class=\"ds-nav-item ds-nav-active\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/></svg>Calendario</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z\"/><polyline points=\"9 22 9 12 15 12 15 22\"/></svg>Hogar</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"23\"/><path d=\"M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6\"/></svg>Finanzas</a></nav>",
+      "css": ".ds-sidebar { background: #001219; padding: 16px 8px; display: flex; flex-direction: column; gap: 2px; width: 240px; min-height: 100vh; box-sizing: border-box; } .ds-sidebar-brand { font-family: 'Poppins', system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #E9D8A6; letter-spacing: 0.04em; padding: 8px 14px 20px; } .ds-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; font-family: 'Poppins', system-ui, sans-serif; font-size: 14px; font-weight: 500; color: rgba(233,216,166,0.7); text-decoration: none; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-nav-item:hover { background: rgba(10,147,150,0.15); color: #E9D8A6; } .ds-nav-item.ds-nav-active { background: rgba(0,95,115,0.4); color: #E9D8A6; font-weight: 600; }"
+    },
+    {
+      "name": "Module Header",
+      "kind": "custom",
+      "refersTo": "button-primary",
+      "description": "Header sticky por módulo. Fondo diferenciado del fondo de página, icono coloreado, título y acción primaria.",
+      "html": "<header class=\"ds-mod-header\"><div class=\"ds-mod-header-l\"><div class=\"ds-mod-icon\" style=\"background:#005F73;\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"white\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"23\"/><path d=\"M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6\"/></svg></div><h1 class=\"ds-mod-title\">Finanzas</h1></div><button class=\"ds-btn-primary\">+ Añadir gasto</button></header>",
+      "css": ".ds-mod-header { display: flex; align-items: center; justify-content: space-between; background: #E8E0CC; padding: 16px 24px; border-bottom: 1px solid #D4CAB0; } .ds-mod-header-l { display: flex; align-items: center; gap: 12px; } .ds-mod-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; } .ds-mod-title { font-family: 'Poppins', system-ui, sans-serif; font-size: 1.25rem; font-weight: 700; color: #001219; margin: 0; line-height: 1.3; } .ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #005F73; color: #FFFFFF; padding: 10px 20px; border-radius: 12px; font-family: 'Poppins', system-ui, sans-serif; font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), transform 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: #0A9396; transform: translateY(-1px); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Reloj del Dinosaurio",
+    "overview": "La interfaz es el dinosaurio sosteniendo el reloj: cada módulo es una manecilla con su propio peso, el sistema es el mecanismo que lo mueve todo sin que tengas que ver los engranajes. El dato se introduce una vez y aparece donde hace falta. El sistema coordina sin pedir coordinación. El usuario habita la app, no la gestiona.\n\nEste sistema visual está construido para la intimidad, no para la escala. Fatumsaurus gestiona las cosas reales de una vida — finanzas, salud, comida, hogar — para un círculo pequeño de personas que se conocen bien. El lenguaje visual lo refleja: cálido sin ser dulce, preciso sin ser frío, organizado sin parecer una herramienta comprada para una oficina.\n\nLo que este sistema rechaza explícitamente: el aplano gris-azul corporativo de apps enterprise como Jira; la suavidad pastelosa de apps de bienestar que usan lavanda y mint para señalar \"calma\"; el monocromatismo blanco desnudo de apps de productividad minimalistas como Linear o Things 3 que resultan frías. Fatumsaurus no es ninguna de esas: tiene calor que se ve, estructura que se siente, y carácter que no hay que explicar.",
+    "keyCharacteristics": [
+      "Sidebar en Noche Marina (#001219) que ancla cada pantalla visualmente",
+      "Superficie en Crema (#F2ECD8) cálida y habitable, no estéril",
+      "Ámbar y teal como puntuación del UI — usados con parquedad, sentidos de inmediato",
+      "Colores de módulo siempre desde las preferencias del usuario en Supabase — nunca hardcodeados",
+      "Poppins como única voz tipográfica: redondeada, directa, sin monsergas",
+      "Liquid glass selectivo: solo en sidebar, modales y cards destacadas — nunca decorativo"
+    ],
+    "rules": [
+      { "name": "The Sidebar Anchor Rule", "body": "El sidebar es siempre Noche Marina (#001219). No cambia por tema, módulo ni temporada. Es la única superficie oscura fija en un sistema warm-light — el contrapeso visual que evita que la app se lea como una hoja de papel.", "section": "colors" },
+      { "name": "The Module Color Rule", "body": "Nunca hardcodear un hex de módulo en un componente. Los colores de módulo viven en user_module_colors de Supabase, se leen desde el store, y pueden ser distintos para cada usuario. Sin color asignado: gris neutro oklch(0.65 0 0). Sin excepciones.", "section": "colors" },
+      { "name": "The Amber Rarity Rule", "body": "El Ámbar aparece en ≤15% de cualquier pantalla. Su función es la urgencia y el highlight. Cuando aparece en demasiados sitios a la vez, deja de señalar nada.", "section": "colors" },
+      { "name": "The Single Voice Rule", "body": "Poppins en todos los contextos. No hay display face, no hay mono para código, no hay serif para citas. La variedad viene del peso y el color, no de la familia.", "section": "typography" },
+      { "name": "The Label Ceiling Rule", "body": "12px es el mínimo en la app. Por debajo de 12px cualquier texto pierde legibilidad en móviles gama media. No existe texto por debajo de este umbral.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Las superficies son planas en reposo. La sombra aparece como respuesta al estado (hover, elevación, focus), nunca como adorno estático.", "section": "elevation" },
+      { "name": "The Selective Glass Rule", "body": "backdrop-filter: blur() se usa solo en sidebar y en modales. No en cards del dashboard, no en tooltips, no en headers de tabla. Cada instancia debe justificarse por el contexto.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar Petróleo (#005F73) como color de acción primaria en botones, links y estados seleccionados.",
+      "Do leer el color de cada módulo desde user_module_colors en Supabase a través del store/context. Nunca hardcodear un hex de módulo.",
+      "Do mantener el sidebar en Noche Marina (#001219) en todos los estados y temas.",
+      "Do usar padding: 0 24px 24px en todas las páginas de módulo sin excepción.",
+      "Do usar sonner para todos los mensajes de feedback (éxito, error, carga).",
+      "Do aplicar backdrop-filter: blur() de forma selectiva: sidebar, modales, cards destacadas.",
+      "Do incluir @media (prefers-reduced-motion: reduce) para cada animación.",
+      "Do verificar contraste: texto secundario #4A6070 sobre #F2ECD8 debe ser ≥4.5:1.",
+      "Do diferenciar el header de módulo (#E8E0CC) del fondo de página (#F2ECD8)."
+    ],
+    "donts": [
+      "Don't hardcodear colores de módulo en componentes.",
+      "Don't usar border-left o border-right mayor de 1px como stripe de color en cards o alertas.",
+      "Don't usar background-clip: text con gradiente — el texto es siempre un color sólido.",
+      "Don't usar glassmorphism por defecto como estética decorativa.",
+      "Don't construir grids de cards idénticas con el mismo icono + heading + texto repetido.",
+      "Don't poner eyebrows en mayúsculas tracked encima de cada sección.",
+      "Don't usar azul-gris corporativo ni paletas monocromas sin chroma (estilo Jira, dashboards enterprise).",
+      "Don't usar colores pastelosos (lavanda, mint, rosa bebé) ni el lenguaje visual de apps de bienestar genéricas.",
+      "Don't construir una interfaz en blanco puro monocroma al estilo Linear o Things 3.",
+      "Don't usar fuente por debajo de 12px en ningún contexto.",
+      "Don't mezclar Poppins con otra sans geométrica."
+    ]
+  }
+}

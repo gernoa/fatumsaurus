@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -46,75 +46,115 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Fatumsaurus brand colors as Tailwind utilities */
+  --color-noche-marina: var(--noche-marina);
+  --color-petroleo: var(--petroleo);
+  --color-teal-brand: var(--teal-brand);
+  --color-arena: var(--arena);
+  --color-crema: var(--crema);
+  --color-header-surface: var(--header-surface);
+  --color-ambar: var(--ambar);
+  --color-rojo-tierra: var(--rojo-tierra);
+  --color-menta: var(--menta);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* ─── Fatumsaurus brand palette ──────────────────────────── */
+  --noche-marina:      oklch(0.10 0.030 209);
+  --petroleo:          oklch(0.37 0.080 209);
+  --teal-brand:        oklch(0.58 0.105 192);
+  --arena:             oklch(0.87 0.050 76);
+  --crema:             oklch(0.93 0.030 76);
+  --header-surface:    oklch(0.895 0.025 76);
+  --ambar:             oklch(0.72 0.170 67);
+  --rojo-tierra:       oklch(0.44 0.185 27);
+  --texto-secundario:  oklch(0.40 0.038 215);
+  --menta:             oklch(0.81 0.066 182);
+
+  /* ─── shadcn token mappings ──────────────────────────────── */
+  --background:          var(--crema);
+  --foreground:          var(--noche-marina);
+  --card:                oklch(1 0 0);
+  --card-foreground:     var(--noche-marina);
+  --popover:             oklch(1 0 0);
+  --popover-foreground:  var(--noche-marina);
+  --primary:             var(--petroleo);
+  --primary-foreground:  oklch(1 0 0);
+  --secondary:           var(--arena);
+  --secondary-foreground: var(--noche-marina);
+  --muted:               oklch(0.91 0.020 76);
+  --muted-foreground:    var(--texto-secundario);
+  --accent:              var(--teal-brand);
+  --accent-foreground:   oklch(1 0 0);
+  --destructive:         var(--rojo-tierra);
+  --border:              var(--arena);
+  --input:               var(--arena);
+  --ring:                var(--teal-brand);
+  --radius:              0.75rem;
+
+  /* ─── Chart tokens ───────────────────────────────────────── */
+  --chart-1: var(--petroleo);
+  --chart-2: var(--teal-brand);
+  --chart-3: var(--ambar);
+  --chart-4: var(--rojo-tierra);
+  --chart-5: var(--menta);
+
+  /* ─── Sidebar tokens ─────────────────────────────────────── */
+  --sidebar:                    var(--noche-marina);
+  --sidebar-foreground:         var(--arena);
+  --sidebar-primary:            var(--petroleo);
+  --sidebar-primary-foreground: var(--arena);
+  --sidebar-accent:             oklch(0.37 0.080 209 / 40%);
+  --sidebar-accent-foreground:  var(--arena);
+  --sidebar-border:             oklch(1 0 0 / 8%);
+  --sidebar-ring:               var(--teal-brand);
+
+  /* ─── App-specific ───────────────────────────────────────── */
+  --topbar-height:          3.5rem;   /* 56px */
+  --sidebar-item-hover-bg:  oklch(0.58 0.105 192 / 15%);
+  --sidebar-item-active-bg: oklch(0.37 0.080 209 / 40%);
+  --module-color-neutral:   oklch(0.65 0 0);
+
+  /* ─── z-index scale ──────────────────────────────────────── */
+  --z-dropdown:       100;
+  --z-sticky:         200;
+  --z-modal-backdrop: 300;
+  --z-modal:          400;
+  --z-toast:          500;
+  --z-tooltip:        600;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Dark mode — variables defined now, implementation deferred */
+  --background:          var(--noche-marina);
+  --foreground:          var(--arena);
+  --card:                oklch(0.14 0.030 209);
+  --card-foreground:     var(--arena);
+  --popover:             oklch(0.14 0.030 209);
+  --popover-foreground:  var(--arena);
+  --primary:             var(--teal-brand);
+  --primary-foreground:  var(--noche-marina);
+  --secondary:           oklch(0.16 0.020 209);
+  --secondary-foreground: var(--arena);
+  --muted:               oklch(0.16 0.020 209);
+  --muted-foreground:    var(--menta);
+  --accent:              oklch(0.37 0.080 209 / 60%);
+  --accent-foreground:   var(--arena);
+  --destructive:         oklch(0.55 0.185 27);
+  --border:              oklch(1 0 0 / 10%);
+  --input:               oklch(1 0 0 / 15%);
+  --ring:                var(--teal-brand);
+  --header-surface:      oklch(0.14 0.030 209);
+
+  --sidebar:                    oklch(0.07 0.025 209);
+  --sidebar-foreground:         var(--arena);
+  --sidebar-primary:            var(--teal-brand);
+  --sidebar-primary-foreground: var(--noche-marina);
+  --sidebar-accent:             oklch(0.58 0.105 192 / 20%);
+  --sidebar-accent-foreground:  var(--arena);
+  --sidebar-border:             oklch(1 0 0 / 8%);
+  --sidebar-ring:               var(--teal-brand);
 }
 
 @layer base {
@@ -123,8 +163,16 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html {
     @apply font-sans;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
