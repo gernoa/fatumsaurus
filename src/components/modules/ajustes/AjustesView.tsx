@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Pencil, X, KeyRound, Eye, EyeOff, Heart, HeartOff } from 'lucide-react'
+import { Check, Pencil, X, KeyRound, Eye, EyeOff, Heart, HeartOff, ChevronDown, Palette } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/contexts/sessionContext'
 import { MODULES } from '@/lib/constants'
+import { useModuleColors, MODULE_PALETTE } from '@/contexts/moduleColorsContext'
 
 // ─── Emoji picker ─────────────────────────────────────────────────────────────
 
@@ -18,13 +19,14 @@ const AVATAR_EMOJIS = [
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <h2 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-1">
+      <h2 className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-1">
+        {icon}
         {title}
       </h2>
-      <div className="bg-card rounded-[16px] border border-border overflow-hidden shadow-[0_1px_8px_rgba(0,18,25,0.05)]">
+      <div className="glass rounded-[16px] overflow-hidden">
         {children}
       </div>
     </div>
@@ -78,7 +80,6 @@ function AvatarSection() {
   return (
     <Row>
       <div className="flex items-center gap-4">
-        {/* Avatar preview */}
         <div className="w-14 h-14 rounded-full bg-petroleo text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
           {displayChar}
         </div>
@@ -118,17 +119,13 @@ function AvatarSection() {
         )}
       </div>
 
-      {/* Emoji picker */}
       {showPicker && (
         <div className="mt-3 pt-3 border-t border-border">
           <div className="flex flex-wrap gap-2">
             {AVATAR_EMOJIS.map((em) => (
               <button
                 key={em}
-                onClick={() => {
-                  setSelectedEmoji(em)
-                  handleSaveAvatar('emoji', em)
-                }}
+                onClick={() => { setSelectedEmoji(em); handleSaveAvatar('emoji', em) }}
                 className={cn(
                   'w-9 h-9 rounded-[8px] text-xl flex items-center justify-center transition-colors',
                   selectedEmoji === em
@@ -167,9 +164,9 @@ function EditableField({
   type?:     string
   readonly?: boolean
 }) {
-  const [editing, setEditing]   = useState(false)
-  const [draft,   setDraft]     = useState(value)
-  const [saving,  setSaving]    = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft,   setDraft]   = useState(value)
+  const [saving,  setSaving]  = useState(false)
 
   async function handleSave() {
     if (!onSave || draft.trim() === value) { setEditing(false); return }
@@ -391,6 +388,107 @@ function PartnerSection() {
   )
 }
 
+// ─── Module colors section ────────────────────────────────────────────────────
+
+const NEUTRAL_HEX = '#8e9196'   // gris neutro para "sin color"
+
+function ModuleColorsSection() {
+  const { getColor, setColor, isColorTaken } = useModuleColors()
+  const [openSlug, setOpenSlug] = useState<string | null>(null)
+
+  const displayModules = MODULES.filter((m) => m.slug !== 'ajustes')
+
+  return (
+    <>
+      {displayModules.map((mod, idx) => {
+        const color  = getColor(mod.slug)
+        const isOpen = openSlug === mod.slug
+        const isLast = idx === displayModules.length - 1
+
+        return (
+          <div key={mod.slug}>
+            {/* Module row */}
+            <button
+              onClick={() => setOpenSlug(isOpen ? null : mod.slug)}
+              className={cn(
+                'w-full flex items-center justify-between px-5 py-3.5 hover:bg-secondary/50 transition-colors text-left',
+                !isLast && !isOpen && 'border-b border-border'
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <mod.icon className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">{mod.name}</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                {/* Color swatch */}
+                <div
+                  className="w-5 h-5 rounded-full border border-border/80 flex-shrink-0"
+                  style={{ backgroundColor: color ?? NEUTRAL_HEX }}
+                />
+                {!color && (
+                  <span className="text-[10px] text-muted-foreground/70 font-medium">sin color</span>
+                )}
+                <ChevronDown className={cn(
+                  'w-3.5 h-3.5 text-muted-foreground transition-transform duration-200',
+                  isOpen && 'rotate-180'
+                )} />
+              </div>
+            </button>
+
+            {/* Inline color picker */}
+            {isOpen && (
+              <div className={cn(
+                'px-5 pb-4 pt-1 bg-secondary/30',
+                !isLast && 'border-b border-border'
+              )}>
+                <p className="text-[10px] text-muted-foreground mb-2.5">
+                  Un color solo puede pertenecer a un módulo a la vez. Pon &quot;sin color&quot; primero para liberar un tono asignado.
+                </p>
+                <div className="flex flex-wrap gap-2 items-center">
+                  {/* Sin color option */}
+                  <button
+                    onClick={() => { setColor(mod.slug, null); setOpenSlug(null) }}
+                    title="Sin color"
+                    className={cn(
+                      'w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all',
+                      !color
+                        ? 'border-foreground scale-110 shadow-md'
+                        : 'border-border/60 hover:scale-105 hover:border-border bg-secondary'
+                    )}
+                  >
+                    <X className="w-3 h-3 text-muted-foreground" />
+                  </button>
+
+                  {/* 17 palette swatches */}
+                  {MODULE_PALETTE.map((p) => {
+                    const taken    = isColorTaken(p.hex, mod.slug)
+                    const selected = color === p.hex
+                    return (
+                      <button
+                        key={p.hex}
+                        onClick={() => { if (!taken) { setColor(mod.slug, p.hex); setOpenSlug(null) } }}
+                        disabled={taken}
+                        title={taken ? `Ya asignado a otro módulo` : p.name}
+                        className={cn(
+                          'w-7 h-7 rounded-full border-2 transition-all',
+                          selected  && 'border-foreground scale-110 shadow-md',
+                          !selected && !taken && 'border-transparent hover:scale-105 hover:border-white/60',
+                          taken     && 'border-transparent opacity-25 cursor-not-allowed'
+                        )}
+                        style={{ backgroundColor: p.hex }}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
 // ─── Main view ────────────────────────────────────────────────────────────────
 
 export function AjustesView() {
@@ -409,7 +507,7 @@ export function AjustesView() {
   }
 
   return (
-    <div className="px-6 pt-4 pb-8 space-y-6 max-w-lg">
+    <div className="px-6 pt-4 pb-10 space-y-6 max-w-lg">
 
       {/* Perfil */}
       <Section title="Perfil">
@@ -429,6 +527,14 @@ export function AjustesView() {
       {/* Pareja */}
       <Section title="Mi pareja">
         <PartnerSection />
+      </Section>
+
+      {/* Colores de módulo */}
+      <Section
+        title="Colores de módulo"
+        icon={<Palette className="w-3 h-3" />}
+      >
+        <ModuleColorsSection />
       </Section>
 
       {/* Módulos activos */}

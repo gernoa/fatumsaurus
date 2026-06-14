@@ -85,7 +85,7 @@ function ConfirmarAportacionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="w-full max-w-md bg-background rounded-[20px] shadow-2xl p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md glass rounded-[20px] shadow-2xl p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-base font-semibold text-foreground">Confirmar aportación</p>
@@ -367,7 +367,7 @@ export function InversionesView() {
       {/* Sticky action bar */}
       <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 pointer-events-none z-40">
         <div className="max-w-2xl mx-auto px-6 pb-4 pointer-events-auto">
-          <div className="flex gap-2 bg-card/90 backdrop-blur-md rounded-[16px] border border-border shadow-lg p-2">
+          <div className="flex gap-2 glass rounded-[16px] p-2">
             <button
               onClick={() => { setEditingProduct(undefined); setShowProducto(true) }}
               className="flex items-center gap-1.5 px-3 py-2.5 rounded-[10px] text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex-shrink-0"
@@ -521,7 +521,7 @@ function ProductRow({
   return (
     <div
       onClick={onClick}
-      className="bg-card rounded-[12px] border border-border px-3.5 py-2.5 flex items-center gap-3 shadow-[0_1px_6px_rgba(0,18,25,0.05)] hover:shadow-[0_2px_10px_rgba(0,18,25,0.08)] hover:border-petroleo/20 cursor-pointer transition-all"
+      className="card-tech px-3.5 py-2.5 flex items-center gap-3 cursor-pointer transition-all"
     >
       <span className="text-base flex-shrink-0">{PRODUCT_TYPE_EMOJIS[product.type]}</span>
 

@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const TABS = [
-  { label: 'Resumen',     href: '/finanzas',            exact: true },
-  { label: 'Gastos',      href: '/finanzas/gastos',     exact: false },
-  { label: 'Conjunta',    href: '/finanzas/conjunta',   exact: false },
-  { label: 'Inversiones', href: '/finanzas/inversiones',exact: false },
-  { label: 'Patrimonio',  href: '/finanzas/patrimonio', exact: false },
-  { label: 'Deudas',      href: '/finanzas/deudas',     exact: false },
+  { label: 'Resumen',     href: '/finanzas',             exact: true  },
+  { label: 'Gastos',      href: '/finanzas/gastos',      exact: false },
+  { label: 'Conjunta',    href: '/finanzas/conjunta',    exact: false },
+  { label: 'Inversiones', href: '/finanzas/inversiones', exact: false },
+  { label: 'Patrimonio',  href: '/finanzas/patrimonio',  exact: false },
+  { label: 'Deudas',      href: '/finanzas/deudas',      exact: false },
 ]
 
 export function FinanzasTabs() {
@@ -18,7 +18,7 @@ export function FinanzasTabs() {
 
   return (
     <div
-      className="sticky bg-background border-b border-border overflow-x-auto scrollbar-none flex-shrink-0"
+      className="sticky glass-subtle border-b border-border/50 overflow-x-auto scrollbar-none flex-shrink-0"
       style={{ top: 'var(--topbar-height)', zIndex: 'var(--z-sticky)' }}
     >
       <nav className="flex gap-0 px-6 min-w-max">

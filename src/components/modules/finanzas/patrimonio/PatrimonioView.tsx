@@ -212,7 +212,7 @@ function AccountSection({
             return (
               <div
                 key={a.id}
-                className="flex items-center gap-3 bg-card rounded-[12px] border border-border px-4 py-3 shadow-[0_1px_8px_rgba(0,18,25,0.05)]"
+                className="flex items-center gap-3 card-tech px-4 py-3"
               >
                 <span className="text-2xl flex-shrink-0">{a.emoji}</span>
 

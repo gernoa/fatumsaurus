@@ -5,171 +5,169 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-poppins), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
+  --color-background:  var(--background);
+  --color-foreground:  var(--foreground);
+  --font-sans:         var(--font-poppins), system-ui, sans-serif;
+  --font-mono:         var(--font-geist-mono);
+  --font-heading:      var(--font-sans);
+  --color-sidebar-ring:               var(--sidebar-ring);
+  --color-sidebar-border:             var(--sidebar-border);
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+  --color-sidebar-accent:             var(--sidebar-accent);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
+  --color-sidebar-primary:            var(--sidebar-primary);
+  --color-sidebar-foreground:         var(--sidebar-foreground);
+  --color-sidebar:                    var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
+  --color-ring:          var(--ring);
+  --color-input:         var(--input);
+  --color-border:        var(--border);
+  --color-border-subtle: var(--border-subtle);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
+  --color-accent:      var(--accent);
   --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
+  --color-muted:       var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
+  --color-secondary:   var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
+  --color-primary:     var(--primary);
   --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
+  --color-popover:     var(--popover);
   --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
+  --color-card:        var(--card);
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Fatumsaurus brand colors as Tailwind utilities */
-  --color-noche-marina: var(--noche-marina);
-  --color-petroleo: var(--petroleo);
-  --color-teal-brand: var(--teal-brand);
-  --color-arena: var(--arena);
-  --color-crema: var(--crema);
+  /* Fatumsaurus brand tokens */
+  --color-noche-marina:   var(--noche-marina);
+  --color-petroleo:       var(--petroleo);
+  --color-teal-brand:     var(--teal-brand);
+  --color-arena:          var(--arena);
+  --color-crema:          var(--crema);
   --color-header-surface: var(--header-surface);
-  --color-ambar: var(--ambar);
-  --color-rojo-tierra: var(--rojo-tierra);
-  --color-menta: var(--menta);
+  --color-ambar:          var(--ambar);
+  --color-rojo-tierra:    var(--rojo-tierra);
+  --color-menta:          var(--menta);
 }
 
 :root {
-  /* ─── Fatumsaurus brand palette ──────────────────────────── */
-  --noche-marina:      oklch(0.10 0.030 209);
-  --petroleo:          oklch(0.37 0.080 209);
-  --teal-brand:        oklch(0.58 0.105 192);
-  --arena:             oklch(0.87 0.050 76);
-  --crema:             oklch(0.93 0.030 76);
-  --header-surface:    oklch(0.895 0.025 76);
-  --ambar:             oklch(0.72 0.170 67);
-  --rojo-tierra:       oklch(0.44 0.185 27);
-  --texto-secundario:  oklch(0.40 0.038 215);
-  --menta:             oklch(0.81 0.066 182);
+  /* ─── Brand palette ─────────────────────────────────────────── */
+  --noche-marina:   oklch(0.10 0.030 209);
+  --petroleo:       oklch(0.37 0.080 209);
+  --teal-brand:     oklch(0.58 0.105 192);
+  --arena:          oklch(0.87 0.050 76);
+  --crema:          oklch(0.93 0.030 76);
+  --header-surface: oklch(0.96 0.008 205);
+  --ambar:          oklch(0.72 0.170 67);
+  --rojo-tierra:    oklch(0.44 0.185 27);
+  --texto-sec:      oklch(0.42 0.030 210);
+  --menta:          oklch(0.81 0.066 182);
 
-  /* ─── shadcn token mappings ──────────────────────────────── */
-  --background:          var(--crema);
+  /* ─── shadcn mappings ────────────────────────────────────────── */
+  --background:          oklch(0.975 0.008 205);    /* near-white, cool tint */
   --foreground:          var(--noche-marina);
-  --card:                oklch(1 0 0);
+  --card:                oklch(1 0 0 / 52%);         /* glass white — more transparent */
   --card-foreground:     var(--noche-marina);
-  --popover:             oklch(1 0 0);
+  --popover:             oklch(1 0 0 / 92%);
   --popover-foreground:  var(--noche-marina);
   --primary:             var(--petroleo);
   --primary-foreground:  oklch(1 0 0);
-  --secondary:           var(--arena);
+  --secondary:           oklch(0.94 0.010 205);
   --secondary-foreground: var(--noche-marina);
-  --muted:               oklch(0.91 0.020 76);
-  --muted-foreground:    var(--texto-secundario);
+  --muted:               oklch(0.94 0.008 205);
+  --muted-foreground:    var(--texto-sec);
   --accent:              var(--teal-brand);
   --accent-foreground:   oklch(1 0 0);
   --destructive:         var(--rojo-tierra);
-  --border:              var(--arena);
-  --input:               var(--arena);
+  /* Teal-tinted border — gives the tech/futuristic feel on all cards */
+  --border:              oklch(0.60 0.090 192 / 28%);
+  --border-subtle:       oklch(0.60 0.090 192 / 14%);
+  --input:               oklch(0.93 0.008 205);
   --ring:                var(--teal-brand);
   --radius:              0.75rem;
 
-  /* ─── Chart tokens ───────────────────────────────────────── */
+  /* ─── Charts ─────────────────────────────────────────────────── */
   --chart-1: var(--petroleo);
   --chart-2: var(--teal-brand);
   --chart-3: var(--ambar);
   --chart-4: var(--rojo-tierra);
   --chart-5: var(--menta);
 
-  /* ─── Sidebar tokens ─────────────────────────────────────── */
-  --sidebar:                    var(--noche-marina);
-  --sidebar-foreground:         var(--arena);
+  /* ─── Sidebar ────────────────────────────────────────────────── */
+  --sidebar:                    oklch(0.10 0.030 209 / 82%);
+  --sidebar-foreground:         oklch(0.88 0.025 200);
   --sidebar-primary:            var(--petroleo);
   --sidebar-primary-foreground: var(--arena);
-  --sidebar-accent:             oklch(0.37 0.080 209 / 40%);
-  --sidebar-accent-foreground:  var(--arena);
+  --sidebar-accent:             oklch(0.58 0.105 192 / 15%);
+  --sidebar-accent-foreground:  oklch(0.88 0.025 200);
   --sidebar-border:             oklch(1 0 0 / 8%);
   --sidebar-ring:               var(--teal-brand);
 
-  /* ─── App-specific ───────────────────────────────────────── */
-  --topbar-height:          3.5rem;   /* 56px */
-  --sidebar-item-hover-bg:  oklch(0.58 0.105 192 / 15%);
-  --sidebar-item-active-bg: oklch(0.37 0.080 209 / 40%);
-  --module-color-neutral:   oklch(0.65 0 0);
+  /* ─── App layout ─────────────────────────────────────────────── */
+  --topbar-height:         3.5rem;
+  --sidebar-item-hover-bg: oklch(0.58 0.105 192 / 12%);
+  --sidebar-item-active-bg:oklch(0.37 0.080 209 / 35%);
+  --module-color-neutral:  oklch(0.65 0 0);
 
-  /* ─── z-index scale ──────────────────────────────────────── */
-  --z-sticky:              200;  /* pestañas fijas, topbar */
-  --z-dropdown-backdrop:   250;  /* captura clicks fuera del dropdown */
-  --z-dropdown:            260;  /* el menú desplegable en sí */
-  --z-modal-backdrop:      300;  /* overlay de modal */
-  --z-modal:               400;  /* ventanas modales */
-  --z-toast:               500;  /* toasts / sonner */
-  --z-tooltip:             600;  /* tooltips */
+  /* ─── z-index scale ──────────────────────────────────────────── */
+  --z-sticky:           200;
+  --z-dropdown-backdrop:250;
+  --z-dropdown:         260;
+  --z-modal-backdrop:   300;
+  --z-modal:            400;
+  --z-toast:            500;
+  --z-tooltip:          600;
 }
 
 .dark {
-  /* Dark mode — variables defined now, implementation deferred */
   --background:          var(--noche-marina);
   --foreground:          var(--arena);
-  --card:                oklch(0.14 0.030 209);
+  --card:                oklch(0.14 0.030 209 / 80%);
   --card-foreground:     var(--arena);
-  --popover:             oklch(0.14 0.030 209);
+  --popover:             oklch(0.14 0.030 209 / 95%);
   --popover-foreground:  var(--arena);
   --primary:             var(--teal-brand);
   --primary-foreground:  var(--noche-marina);
   --secondary:           oklch(0.16 0.020 209);
-  --secondary-foreground: var(--arena);
+  --secondary-foreground:var(--arena);
   --muted:               oklch(0.16 0.020 209);
   --muted-foreground:    var(--menta);
   --accent:              oklch(0.37 0.080 209 / 60%);
   --accent-foreground:   var(--arena);
   --destructive:         oklch(0.55 0.185 27);
   --border:              oklch(1 0 0 / 10%);
-  --input:               oklch(1 0 0 / 15%);
+  --input:               oklch(1 0 0 / 12%);
   --ring:                var(--teal-brand);
-  --header-surface:      oklch(0.14 0.030 209);
-
-  --sidebar:                    oklch(0.07 0.025 209);
-  --sidebar-foreground:         var(--arena);
-  --sidebar-primary:            var(--teal-brand);
+  --header-surface:      oklch(0.13 0.030 209);
+  --sidebar:             oklch(0.07 0.025 209 / 95%);
+  --sidebar-foreground:  var(--arena);
+  --sidebar-primary:     var(--teal-brand);
   --sidebar-primary-foreground: var(--noche-marina);
-  --sidebar-accent:             oklch(0.58 0.105 192 / 20%);
-  --sidebar-accent-foreground:  var(--arena);
-  --sidebar-border:             oklch(1 0 0 / 8%);
-  --sidebar-ring:               var(--teal-brand);
+  --sidebar-accent:      oklch(0.58 0.105 192 / 20%);
+  --sidebar-accent-foreground: var(--arena);
+  --sidebar-border:      oklch(1 0 0 / 8%);
+  --sidebar-ring:        var(--teal-brand);
 }
 
+/* ─── Base styles ────────────────────────────────────────────────── */
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
+  * { @apply border-border outline-ring/50; }
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  html {
-    @apply font-sans;
-  }
+  html { @apply font-sans; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -177,3 +175,68 @@
     }
   }
 }
+
+/* ─── Glass and card utilities ───────────────────────────────────── */
+@layer utilities {
+  /* Panels / sections — white glass */
+  .glass {
+    background: oklch(1 0 0 / 65%);
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    border: 1px solid oklch(0.60 0.090 192 / 25%);
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 55%),
+      0 4px 24px oklch(0 0 0 / 0.06);
+  }
+
+  /* Sticky bars / topbar */
+  .glass-subtle {
+    background: oklch(1 0 0 / 55%);
+    backdrop-filter: blur(12px) saturate(1.3);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    border-color: oklch(0.60 0.090 192 / 20%);
+  }
+
+  /* Sidebar */
+  .glass-dark {
+    background: oklch(0.10 0.030 209 / 80%);
+    backdrop-filter: blur(22px) saturate(1.7);
+    -webkit-backdrop-filter: blur(22px) saturate(1.7);
+    border: 1px solid oklch(1 0 0 / 8%);
+  }
+
+  /* Individual card — the futuristic tech card */
+  .card-tech {
+    background: oklch(1 0 0 / 50%);
+    backdrop-filter: blur(12px) saturate(1.3);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    border: 1px solid oklch(0.60 0.090 192 / 30%);
+    border-radius: var(--radius-xl);
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 50%),
+      0 2px 12px oklch(0 0 0 / 0.05),
+      0 0 0 0 oklch(0.58 0.105 192 / 0);
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .card-tech:hover {
+    border-color: oklch(0.60 0.090 192 / 50%);
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 55%),
+      0 4px 20px oklch(0 0 0 / 0.07),
+      0 0 0 3px oklch(0.58 0.105 192 / 8%);
+  }
+
+  /* Orb — absolutely positioned blurred circle */
+  .orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+}
+

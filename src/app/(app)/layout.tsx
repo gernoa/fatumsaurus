@@ -4,6 +4,7 @@ import { MobileNav } from '@/components/layout/MobileNav'
 import { PatrimonioProvider } from '@/contexts/patrimonioContext'
 import { InversionesProvider } from '@/contexts/inversionesContext'
 import { GastosProvider } from '@/contexts/gastosContext'
+import { ModuleColorsProvider } from '@/contexts/moduleColorsContext'
 import { SessionProvider, type UserProfile } from '@/contexts/sessionContext'
 import { createClient } from '@/lib/supabase/server'
 
@@ -13,14 +14,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Fetch del perfil del usuario actual (incluyendo partner_id)
   const { data: profile } = await supabase
     .from('profiles')
     .select('id, display_name, avatar_type, avatar_value, partner_id')
     .eq('id', user.id)
     .single()
 
-  // Fetch de todos los perfiles de la app
   const { data: allProfilesData } = await supabase
     .from('profiles')
     .select('id, display_name, avatar_type, avatar_value, partner_id')
@@ -48,21 +47,40 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <SessionProvider user={userProfile} allUsers={allUsers} partner={partner}>
-      <GastosProvider>
-      <PatrimonioProvider>
-      <InversionesProvider>
-        <div className="flex h-screen overflow-hidden bg-background">
-          <Sidebar />
-          <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-            <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
-              {children}
-            </main>
-          </div>
-          <MobileNav />
+    <GastosProvider>
+    <PatrimonioProvider>
+    <InversionesProvider>
+    <ModuleColorsProvider>
+      {/* Root shell with orbs */}
+      <div className="relative flex h-screen overflow-hidden bg-background">
+
+        {/* Orbs de fondo — CSS blur circles, no JS */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0" aria-hidden>
+          {/* Teal grande — ocupa esquina top-right del área principal */}
+          <div className="orb w-[660px] h-[660px] opacity-55"
+               style={{ background: 'oklch(0.58 0.105 192)', top: '-160px', right: '-60px' }} />
+          {/* Petroleo azul oscuro — cruza sidebar y área principal por abajo-izquierda */}
+          <div className="orb w-[520px] h-[520px] opacity-55"
+               style={{ background: 'oklch(0.24 0.058 209)', bottom: '-80px', left: '-80px' }} />
+          {/* Ámbar dorado — acento cálido en el centro */}
+          <div className="orb w-[340px] h-[340px] opacity-40"
+               style={{ background: 'oklch(0.72 0.170 67)', top: '35%', right: '28%' }} />
         </div>
-      </InversionesProvider>
-      </PatrimonioProvider>
-      </GastosProvider>
+
+        <Sidebar />
+
+        <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden z-[1]">
+          <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
+            {children}
+          </main>
+        </div>
+
+        <MobileNav />
+      </div>
+    </ModuleColorsProvider>
+    </InversionesProvider>
+    </PatrimonioProvider>
+    </GastosProvider>
     </SessionProvider>
   )
 }

@@ -218,7 +218,7 @@ export function GastosView() {
         <UpcomingRecurring gastos={gastos} onRegister={handleRegisterRecurring} />
 
         {/* Summary card */}
-        <div className="bg-card rounded-[16px] border border-border shadow-[0_2px_12px_rgba(0,18,25,0.08)] p-5">
+        <div className="glass rounded-[16px] p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Total {MONTHS[month].toLowerCase()}</p>
@@ -274,7 +274,7 @@ export function GastosView() {
                     <div
                       key={g.id}
                       onClick={() => { setEditingGasto(g); setShowModal(true) }}
-                      className="group flex items-center gap-3 bg-card rounded-[12px] border border-border px-4 py-3 shadow-[0_1px_8px_rgba(0,18,25,0.05)] hover:shadow-[0_2px_12px_rgba(0,18,25,0.09)] transition-shadow cursor-pointer"
+                      className="group card-tech px-4 py-3 cursor-pointer"
                     >
                       <div className={cn('w-2 h-2 rounded-full flex-shrink-0', cat.dotClass)} />
                       <div className="flex-1 min-w-0">

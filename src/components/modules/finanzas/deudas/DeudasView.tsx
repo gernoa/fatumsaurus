@@ -201,8 +201,8 @@ function DeudaCard({
 
   return (
     <div className={cn(
-      'bg-card rounded-[14px] border shadow-[0_1px_8px_rgba(0,18,25,0.05)] overflow-hidden',
-      saldada ? 'border-border opacity-60' : 'border-border'
+      'card-tech overflow-hidden',
+      saldada ? 'opacity-55' : ''
     )}>
       <div className="flex items-center gap-3 px-4 py-3.5">
         {/* Color dot */}

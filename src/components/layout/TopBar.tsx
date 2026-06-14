@@ -42,8 +42,8 @@ export function TopBar() {
 
   return (
     <header
-      className="flex-shrink-0 flex items-center justify-end px-6 border-b border-border bg-background"
-      style={{ height: 'var(--topbar-height)' }}
+      className="flex-shrink-0 flex items-center justify-end px-6 border-b border-border/60 glass-subtle sticky top-0"
+      style={{ height: 'var(--topbar-height)', zIndex: 'var(--z-sticky)' }}
     >
       <div className="flex items-center gap-3">
 
@@ -100,8 +100,8 @@ export function TopBar() {
               <div
                 className={cn(
                   'absolute right-0 top-full mt-2 w-48',
-                  'bg-card border border-border rounded-[12px]',
-                  'shadow-[0_4px_20px_rgba(0,18,25,0.15)]',
+                  'glass rounded-[12px]',
+                  'shadow-[0_8px_32px_oklch(0_0_0/0.14)]',
                   'py-1.5 overflow-hidden'
                 )}
                 style={{ zIndex: 'var(--z-dropdown)' }}

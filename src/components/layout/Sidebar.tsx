@@ -33,6 +33,8 @@ export function Sidebar() {
     <aside
       className={cn(
         'hidden lg:flex flex-col bg-sidebar flex-shrink-0',
+        'backdrop-blur-xl backdrop-saturate-150',
+        'border-r border-sidebar-border',
         'transition-[width] duration-150 ease-out',
         isCollapsed ? 'w-16' : 'w-60'
       )}

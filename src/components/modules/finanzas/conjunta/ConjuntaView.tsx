@@ -442,7 +442,7 @@ export function ConjuntaView() {
         </div>
 
         {/* Balance neto */}
-        <div className="bg-card rounded-[16px] border border-border shadow-[0_2px_12px_rgba(0,18,25,0.08)] overflow-hidden">
+        <div className="glass rounded-[16px] overflow-hidden">
           <div className="px-5 py-3 border-b border-border">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Balance neto</p>
           </div>
@@ -581,7 +581,7 @@ export function ConjuntaView() {
                   const d = t.data
                   const isMe = d.userId === currentUser.id
                   return (
-                    <div key={d.id} className="flex items-center gap-3 bg-card rounded-[12px] border border-border px-4 py-3 shadow-[0_1px_8px_rgba(0,18,25,0.05)]">
+                    <div key={d.id} className="flex items-center gap-3 card-tech px-4 py-3">
                       <div className="w-8 h-8 rounded-full bg-teal-brand/15 flex items-center justify-center flex-shrink-0">
                         <ArrowDownLeft className="w-4 h-4 text-teal-brand" />
                       </div>
@@ -603,7 +603,7 @@ export function ConjuntaView() {
                   const perPerson = participants.length > 0 ? r2(net / participants.length) : net
                   const hasThirdParty = g.thirdParty.length > 0
                   return (
-                    <div key={g.id} className="flex items-center gap-3 bg-card rounded-[12px] border border-border px-4 py-3 shadow-[0_1px_8px_rgba(0,18,25,0.05)]">
+                    <div key={g.id} className="flex items-center gap-3 card-tech px-4 py-3">
                       <div className="w-8 h-8 rounded-full bg-rojo-tierra/10 flex items-center justify-center flex-shrink-0">
                         <ArrowUpRight className="w-4 h-4 text-rojo-tierra" />
                       </div>
