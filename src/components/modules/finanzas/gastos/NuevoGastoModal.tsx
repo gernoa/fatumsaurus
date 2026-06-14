@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Plus, Trash2, RefreshCw } from 'lucide-react'
+import { X, Plus, Trash2, RefreshCw, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/lib/gasto'
 import { useUsers } from '@/lib/users'
 import { usePatrimonio } from '@/contexts/patrimonioContext'
+import { useSession } from '@/contexts/sessionContext'
 
 interface Props {
   initialGasto?: Gasto
@@ -42,6 +43,7 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
   const isEdit = !!(initialGasto?.id)
   const { accounts } = usePatrimonio()
   const { currentUser, allUsers } = useUsers()
+  const { partner } = useSession()
 
   const userAccounts = accounts.filter(
     (a) => a.isActive && (a.ownerId === currentUser.id || a.type === 'conjunta')
@@ -75,6 +77,10 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
   )
   const [recurringNextDate, setRecurringNextDate] = useState(
     initialGasto?.recurring?.nextDate ?? addPeriod(TODAY, 'monthly')
+  )
+  // Compartido 50-50: por defecto true si hay pareja y no se está editando con valor explícito
+  const [compartido, setCompartido] = useState<boolean>(
+    initialGasto?.compartido ?? !!partner
   )
   const [error, setError] = useState('')
 
@@ -133,6 +139,7 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
       date,
       paidById: currentUser.id,
       paidVia,
+      compartido: paidVia === 'conjunta' ? false : compartido,
       accountId,
       notes: notes.trim() || undefined,
       thirdParty: thirdParty
@@ -403,6 +410,44 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
               </div>
             )}
           </div>
+
+          {/* Compartido 50-50 — solo en gastos personales con pareja configurada */}
+          {paidVia === 'personal' && partner && (
+            <button
+              type="button"
+              onClick={() => setCompartido((v) => !v)}
+              className={cn(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-[10px] border transition-colors text-left',
+                compartido ? 'bg-teal-brand/8 border-teal-brand/20' : 'bg-secondary border-transparent hover:border-border'
+              )}
+            >
+              <div className={cn(
+                'w-8 h-8 rounded-[8px] flex items-center justify-center flex-shrink-0 transition-colors',
+                compartido ? 'bg-teal-brand text-white' : 'bg-border text-muted-foreground'
+              )}>
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">50-50 con {partner.display_name}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {compartido
+                    ? amountNum > 0
+                      ? `${partner.display_name} te deberá ${formatCurrency(amountNum / 2)}`
+                      : 'La deuda se calculará automáticamente'
+                    : 'Solo tuyo, sin compartir'}
+                </p>
+              </div>
+              <div className={cn(
+                'w-10 h-5 rounded-full transition-colors flex-shrink-0 relative',
+                compartido ? 'bg-teal-brand' : 'bg-border'
+              )}>
+                <div className={cn(
+                  'absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform',
+                  compartido ? 'translate-x-5' : 'translate-x-0.5'
+                )} />
+              </div>
+            </button>
+          )}
 
           {/* Notes */}
           <div>

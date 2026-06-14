@@ -1,5 +1,5 @@
-import { ConjuntaView } from '@/components/modules/finanzas/conjunta/ConjuntaView'
+import { redirect } from 'next/navigation'
 
 export default function ConjuntaPage() {
-  return <ConjuntaView />
+  redirect('/finanzas')
 }

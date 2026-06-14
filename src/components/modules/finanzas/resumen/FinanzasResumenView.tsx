@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useMemo } from 'react'
 import { useState } from 'react'
 import {
-  Wallet, Users, TrendingUp, PiggyBank, AlertCircle, ChevronRight, RefreshCw,
+  Wallet, Users, TrendingUp, PiggyBank, AlertCircle, ChevronRight, RefreshCw, BarChart2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
@@ -19,6 +19,7 @@ import { useUsers } from '@/lib/users'
 import { usePatrimonio } from '@/contexts/patrimonioContext'
 import { useInversiones } from '@/contexts/inversionesContext'
 import { useGastos } from '@/contexts/gastosContext'
+import { useSession } from '@/contexts/sessionContext'
 import { getPortfolioTotals, getProductStats } from '@/lib/inversiones'
 import { MOCK_DEPOSITS } from '@/lib/mock-conjunta'
 
@@ -48,10 +49,8 @@ function SummaryCard({ title, href, icon: Icon, primary, sub, badge, badgeOk, em
     <Link
       href={href}
       className={cn(
-        'group bg-card rounded-[16px] border border-border px-5 py-4',
-        'shadow-[0_1px_8px_rgba(0,18,25,0.05)]',
-        'hover:shadow-[0_4px_20px_rgba(0,18,25,0.10)] hover:border-petroleo/25',
-        'transition-all flex items-start justify-between gap-3'
+        'group card-tech px-5 py-4',
+        'flex items-start justify-between gap-3'
       )}
     >
       <div className="flex-1 min-w-0">
@@ -91,6 +90,7 @@ export function FinanzasResumenView() {
   const { currentUser }                          = useUsers()
   const { products, aportaciones, valoraciones } = useInversiones()
   const { gastos: allGastos }                    = useGastos()
+  const { user }                                 = useSession()
 
   // Gastos personales este mes
   const thisMonth   = useMemo(() => filterByMonth(personalGastos(allGastos, currentUser.id), TODAY_YEAR, TODAY_MONTH), [allGastos, currentUser.id])
@@ -117,8 +117,10 @@ export function FinanzasResumenView() {
   const totalCuentas = personalAccounts.reduce((s, a) => s + a.balance, 0)
   const patrimonioEmpty = personalAccounts.every((a) => a.balance === 0) && inversionesEmpty
 
-  // Deudas activas (from DeudasView — cross-module, hardcoded for now)
-  const deudasEmpty = true
+  // Deudas: calculadas desde gastos compartidos reales
+  const gastosCompartidosMios = allGastos.filter((g) => g.compartido && g.paidVia === 'personal' && g.paidById === user.id)
+  const deudasEmpty = gastosCompartidosMios.length === 0
+  const totalDeudas = gastosCompartidosMios.reduce((s, g) => s + g.amount / 2, 0)
 
   // Recurrentes próximos (todos los gastos con recurring.nextDate en los próximos 30 días)
   const today = new Date()
@@ -197,14 +199,25 @@ export function FinanzasResumenView() {
         />
       </div>
 
+      {/* Análisis link */}
+      <Link
+        href="/finanzas/analisis"
+        className="flex items-center gap-3 card-tech px-5 py-3.5"
+      >
+        <div className="w-7 h-7 rounded-[8px] bg-petroleo/10 flex items-center justify-center flex-shrink-0">
+          <BarChart2 className="w-3.5 h-3.5 text-petroleo" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">Análisis de gastos</p>
+          <p className="text-xs text-muted-foreground">Categorías, promedios y planificador de presupuesto</p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-petroleo transition-colors flex-shrink-0" />
+      </Link>
+
       {/* Deudas link */}
       <Link
         href="/finanzas/deudas"
-        className={cn(
-          'flex items-center gap-3 bg-card rounded-[16px] border border-border px-5 py-3.5',
-          'shadow-[0_1px_8px_rgba(0,18,25,0.05)] hover:shadow-[0_2px_12px_rgba(0,18,25,0.09)]',
-          'transition-all group'
-        )}
+        className="flex items-center gap-3 card-tech px-5 py-3.5"
       >
         <div className="w-7 h-7 rounded-[8px] bg-secondary flex items-center justify-center flex-shrink-0">
           <AlertCircle className="w-3.5 h-3.5 text-muted-foreground" />
@@ -212,7 +225,7 @@ export function FinanzasResumenView() {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">Deudas personales</p>
           <p className="text-xs text-muted-foreground">
-            {deudasEmpty ? 'Sin deudas activas' : 'Ver deudas pendientes'}
+            {deudasEmpty ? 'Sin deudas activas' : `Te deben ${formatCurrency(totalDeudas)}`}
           </p>
         </div>
         <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-petroleo transition-colors flex-shrink-0" />

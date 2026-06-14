@@ -61,6 +61,7 @@ export interface Gasto {
   category: GastoCategory
   paidById: string
   paidVia: PagoOrigen
+  compartido: boolean  // 50-50 con la pareja (true por defecto en gastos personales)
   accountId?: string   // which account was debited
   notes?: string
   thirdParty: GastoThirdParty[]
@@ -177,6 +178,7 @@ export function dbToGasto(row: GastoRow): Gasto {
     category:    (row.category ?? 'otro') as GastoCategory,
     paidById:    row.paid_by_id ?? row.user_id,
     paidVia:     (row.paid_via ?? 'personal') as PagoOrigen,
+    compartido:  row.compartido ?? false,
     notes:       row.notes ?? undefined,
     thirdParty:  [],
   }
@@ -194,7 +196,7 @@ export function gastoToDbInsert(
     date:        g.date,
     category:    g.category,
     paid_via:    g.paidVia,
-    compartido:  g.paidVia === 'conjunta',
+    compartido:  g.compartido ?? (g.paidVia === 'conjunta'),
     origin:      null,
     origin_id:   null,
     notes:       g.notes ?? null,

@@ -1,54 +1,49 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, X, Check, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Plus, X, Check, ChevronDown, ChevronUp, Pencil, Trash2, Users, Receipt } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDateShort } from '@/lib/format'
 import { useUsers } from '@/lib/users'
+import { useGastos } from '@/contexts/gastosContext'
+import { useSession } from '@/contexts/sessionContext'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type DeudaEstado = 'pendiente' | 'parcial' | 'saldada'
 type DeudaTipo   = 'me-deben' | 'debo'
 
-interface Deuda {
+interface DeudaManual {
   id:            string
   tipo:          DeudaTipo
   concepto:      string
   importe:       number
   importePagado: number
-  personaId:     string | null   // uuid si es usuario de la app
-  personaNombre: string          // nombre libre si no es usuario
-  fecha:         string          // YYYY-MM-DD
+  personaId:     string | null
+  personaNombre: string
+  fecha:         string
   notas?:        string
   estado:        DeudaEstado
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-let _id = 100
-const uid = () => String(++_id)
-
-const MOCK_DEUDAS: Deuda[] = []
-
-// ─── Modal ────────────────────────────────────────────────────────────────────
+// ─── Modal deuda manual ───────────────────────────────────────────────────────
 
 interface ModalProps {
-  initial?: Deuda
-  onSave:  (d: Omit<Deuda, 'id' | 'estado' | 'importePagado'>) => void
+  initial?: DeudaManual
+  onSave:  (d: Omit<DeudaManual, 'id' | 'estado' | 'importePagado'>) => void
   onClose: () => void
 }
 
 function DeudaModal({ initial, onSave, onClose }: ModalProps) {
   const { otherUsers } = useUsers()
   const TODAY = new Date().toISOString().split('T')[0]
-  const [tipo,    setTipo]    = useState<DeudaTipo>(initial?.tipo ?? 'me-deben')
-  const [concepto,setConcepto]= useState(initial?.concepto ?? '')
-  const [importe, setImporte] = useState(initial?.importe?.toString() ?? '')
-  const [persona, setPersona] = useState(initial?.personaNombre ?? '')
-  const [fecha,   setFecha]   = useState(initial?.fecha ?? TODAY)
-  const [notas,   setNotas]   = useState(initial?.notas ?? '')
+  const [tipo,     setTipo]     = useState<DeudaTipo>(initial?.tipo ?? 'me-deben')
+  const [concepto, setConcepto] = useState(initial?.concepto ?? '')
+  const [importe,  setImporte]  = useState(initial?.importe?.toString() ?? '')
+  const [persona,  setPersona]  = useState(initial?.personaNombre ?? '')
+  const [fecha,    setFecha]    = useState(initial?.fecha ?? TODAY)
+  const [notas,    setNotas]    = useState(initial?.notas ?? '')
 
   const isValid = concepto.trim() && parseFloat(importe) > 0 && persona.trim()
 
@@ -82,8 +77,6 @@ function DeudaModal({ initial, onSave, onClose }: ModalProps) {
         </div>
 
         <div className="px-5 py-4 space-y-4">
-
-          {/* Tipo */}
           <div className="flex rounded-[10px] border border-border overflow-hidden">
             {(['me-deben', 'debo'] as DeudaTipo[]).map((t) => (
               <button
@@ -101,33 +94,23 @@ function DeudaModal({ initial, onSave, onClose }: ModalProps) {
             ))}
           </div>
 
-          {/* Concepto */}
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Concepto</label>
             <input
-              type="text"
-              placeholder="ej: Cena del martes"
-              value={concepto}
-              onChange={(e) => setConcepto(e.target.value)}
-              autoFocus
+              type="text" placeholder="ej: Cena del martes" value={concepto}
+              onChange={(e) => setConcepto(e.target.value)} autoFocus
               className="w-full px-3.5 py-2.5 rounded-[10px] border border-border bg-secondary/40 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-petroleo/30 focus:border-petroleo transition"
             />
           </div>
 
-          {/* Importe + Persona */}
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Importe</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">€</span>
                 <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  value={importe}
-                  onChange={(e) => setImporte(e.target.value)}
+                  type="number" inputMode="decimal" step="0.01" min="0" placeholder="0,00"
+                  value={importe} onChange={(e) => setImporte(e.target.value)}
                   className="w-full pl-7 pr-3 py-2.5 rounded-[10px] border border-border bg-secondary/40 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-petroleo/30 focus:border-petroleo transition"
                 />
               </div>
@@ -135,37 +118,27 @@ function DeudaModal({ initial, onSave, onClose }: ModalProps) {
             <div className="flex-1">
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Persona</label>
               <input
-                type="text"
-                placeholder="Nombre"
-                value={persona}
-                onChange={(e) => setPersona(e.target.value)}
-                list="personas-list"
+                type="text" placeholder="Nombre" value={persona}
+                onChange={(e) => setPersona(e.target.value)} list="personas-list"
                 className="w-full px-3.5 py-2.5 rounded-[10px] border border-border bg-secondary/40 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-petroleo/30 focus:border-petroleo transition"
               />
               <datalist id="personas-list">
-                {otherUsers.map((u) => (
-                  <option key={u.id} value={u.name} />
-                ))}
+                {otherUsers.map((u) => <option key={u.id} value={u.name} />)}
               </datalist>
             </div>
           </div>
 
-          {/* Fecha + Notas */}
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Fecha</label>
             <input
-              type="date"
-              value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
+              type="date" value={fecha} onChange={(e) => setFecha(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-[10px] border border-border bg-secondary/40 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-petroleo/30 focus:border-petroleo transition"
             />
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Notas <span className="font-normal normal-case">(opcional)</span></label>
             <textarea
-              rows={2}
-              placeholder="Contexto extra…"
-              value={notas}
+              rows={2} placeholder="Contexto extra…" value={notas}
               onChange={(e) => setNotas(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-[10px] border border-border bg-secondary/40 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-petroleo/30 focus:border-petroleo transition resize-none"
             />
@@ -185,68 +158,47 @@ function DeudaModal({ initial, onSave, onClose }: ModalProps) {
   )
 }
 
-// ─── Deuda card ───────────────────────────────────────────────────────────────
+// ─── Deuda manual card ────────────────────────────────────────────────────────
 
-function DeudaCard({
+function DeudaManualCard({
   deuda, onEdit, onDelete, onSaldar,
 }: {
-  deuda:    Deuda
-  onEdit:   (d: Deuda) => void
+  deuda:    DeudaManual
+  onEdit:   (d: DeudaManual) => void
   onDelete: (id: string) => void
   onSaldar: (id: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
-  const saldada = deuda.estado === 'saldada'
+  const saldada   = deuda.estado === 'saldada'
   const isMeDeben = deuda.tipo === 'me-deben'
 
   return (
-    <div className={cn(
-      'card-tech overflow-hidden',
-      saldada ? 'opacity-55' : ''
-    )}>
+    <div className={cn('card-tech overflow-hidden', saldada ? 'opacity-55' : '')}>
       <div className="flex items-center gap-3 px-4 py-3.5">
-        {/* Color dot */}
         <div className={cn(
           'w-2.5 h-2.5 rounded-full flex-shrink-0',
-          saldada     ? 'bg-muted-foreground/30' :
-          isMeDeben   ? 'bg-teal-brand'          : 'bg-rojo-tierra'
+          saldada ? 'bg-muted-foreground/30' : isMeDeben ? 'bg-teal-brand' : 'bg-rojo-tierra'
         )} />
-
         <div className="flex-1 min-w-0">
           <p className={cn('text-sm font-semibold text-foreground truncate', saldada && 'line-through text-muted-foreground')}>
             {deuda.concepto}
           </p>
-          <p className="text-[11px] text-muted-foreground">
-            {deuda.personaNombre} · {formatDateShort(deuda.fecha)}
-          </p>
+          <p className="text-[11px] text-muted-foreground">{deuda.personaNombre} · {formatDateShort(deuda.fecha)}</p>
         </div>
-
         <div className="text-right flex-shrink-0">
-          <p className={cn(
-            'text-sm font-bold',
-            saldada   ? 'text-muted-foreground' :
-            isMeDeben ? 'text-teal-brand'        : 'text-rojo-tierra'
-          )}>
+          <p className={cn('text-sm font-bold', saldada ? 'text-muted-foreground' : isMeDeben ? 'text-teal-brand' : 'text-rojo-tierra')}>
             {isMeDeben ? '+' : '-'}{formatCurrency(deuda.importe)}
           </p>
-          {saldada && (
-            <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">Saldada</span>
-          )}
+          {saldada && <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">Saldada</span>}
         </div>
-
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-        >
+        <button onClick={() => setExpanded((v) => !v)} className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0">
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
       </div>
 
       {expanded && (
         <div className="px-4 pb-3 pt-0 border-t border-border space-y-2">
-          {deuda.notas && (
-            <p className="text-xs text-muted-foreground italic">{deuda.notas}</p>
-          )}
+          {deuda.notas && <p className="text-xs text-muted-foreground italic">{deuda.notas}</p>}
           <div className="flex gap-2">
             {!saldada && (
               <button
@@ -257,18 +209,106 @@ function DeudaCard({
                 Marcar como saldada
               </button>
             )}
-            <button
-              onClick={() => onEdit(deuda)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-medium text-muted-foreground bg-secondary hover:text-foreground transition-colors"
-            >
+            <button onClick={() => onEdit(deuda)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-medium text-muted-foreground bg-secondary hover:text-foreground transition-colors">
               <Pencil className="w-3.5 h-3.5" />
               Editar
             </button>
-            <button
-              onClick={() => onDelete(deuda.id)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-medium text-rojo-tierra bg-rojo-tierra/8 hover:bg-rojo-tierra/15 transition-colors ml-auto"
-            >
+            <button onClick={() => onDelete(deuda.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-medium text-rojo-tierra bg-rojo-tierra/8 hover:bg-rojo-tierra/15 transition-colors ml-auto">
               <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Panel de gastos compartidos con pareja ───────────────────────────────────
+
+interface GastoCompartido {
+  id:          string
+  description: string
+  amount:      number
+  date:        string
+}
+
+function CompartidosPanel({
+  partnerName,
+  gastos: gastosCompartidos,
+  onLiquidar,
+}: {
+  partnerName: string
+  gastos:      GastoCompartido[]
+  onLiquidar:  () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const total = gastosCompartidos.reduce((s, g) => s + g.amount / 2, 0)
+
+  if (gastosCompartidos.length === 0) {
+    return (
+      <div className="card-tech px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-[10px] bg-teal-brand/10 flex items-center justify-center flex-shrink-0">
+            <Users className="w-4 h-4 text-teal-brand" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{partnerName}</p>
+            <p className="text-xs text-muted-foreground">Sin gastos compartidos pendientes</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="card-tech overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3.5">
+        <div className="w-9 h-9 rounded-[10px] bg-teal-brand/10 flex items-center justify-center flex-shrink-0">
+          <Users className="w-4 h-4 text-teal-brand" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">{partnerName}</p>
+          <p className="text-[11px] text-muted-foreground">
+            {gastosCompartidos.length} gasto{gastosCompartidos.length !== 1 ? 's' : ''} compartido{gastosCompartidos.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <div className="text-right flex-shrink-0 mr-1">
+          <p className="text-sm font-bold text-teal-brand">+{formatCurrency(total)}</p>
+          <p className="text-[10px] text-muted-foreground">te debe</p>
+        </div>
+        <button onClick={() => setExpanded((v) => !v)} className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0">
+          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-border">
+          <div className="divide-y divide-border/50">
+            {gastosCompartidos.map((g) => (
+              <div key={g.id} className="flex items-center gap-3 px-4 py-3">
+                <Receipt className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground truncate">{g.description}</p>
+                  <p className="text-[11px] text-muted-foreground">{formatDateShort(g.date)}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs text-muted-foreground">{formatCurrency(g.amount)} total</p>
+                  <p className="text-sm font-semibold text-teal-brand">+{formatCurrency(g.amount / 2)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="px-4 py-3 bg-secondary/30 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Total pendiente</p>
+              <p className="text-sm font-bold text-teal-brand">{formatCurrency(total)}</p>
+            </div>
+            <button
+              onClick={onLiquidar}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] text-xs font-semibold text-white bg-teal-brand hover:bg-petroleo transition-colors"
+            >
+              <Check className="w-3.5 h-3.5" />
+              Registrar liquidación
             </button>
           </div>
         </div>
@@ -279,26 +319,44 @@ function DeudaCard({
 
 // ─── Main view ────────────────────────────────────────────────────────────────
 
-export function DeudasView() {
-  const [deudas,      setDeudas]      = useState<Deuda[]>(MOCK_DEUDAS)
-  const [showModal,   setShowModal]   = useState(false)
-  const [editingDeuda,setEditingDeuda]= useState<Deuda | undefined>()
-  const [showSaldadas,setShowSaldadas]= useState(false)
+let _manualId = 100
+const uid = () => String(++_manualId)
 
+export function DeudasView() {
+  const { gastos }  = useGastos()
+  const { user, partner } = useSession()
+
+  const [deudas,       setDeudas]       = useState<DeudaManual[]>([])
+  const [showModal,    setShowModal]    = useState(false)
+  const [editingDeuda, setEditingDeuda] = useState<DeudaManual | undefined>()
+  const [showSaldadas, setShowSaldadas] = useState(false)
+
+  // Gastos compartidos: los que yo pagué con compartido=true
+  const gastosCompartidosMios = useMemo(
+    () => gastos.filter((g) => g.compartido && g.paidVia === 'personal' && g.paidById === user.id),
+    [gastos, user.id]
+  )
+
+  // Total automático que me debe la pareja
+  const totalAutoMeDeben = gastosCompartidosMios.reduce((s, g) => s + g.amount / 2, 0)
+
+  // Deudas manuales
   const activas  = deudas.filter((d) => d.estado !== 'saldada')
   const saldadas = deudas.filter((d) => d.estado === 'saldada')
 
-  const totalMeDeben = activas.filter((d) => d.tipo === 'me-deben').reduce((s, d) => s + d.importe, 0)
-  const totalDebo    = activas.filter((d) => d.tipo === 'debo').reduce((s, d) => s + d.importe, 0)
+  const totalManualMeDeben = activas.filter((d) => d.tipo === 'me-deben').reduce((s, d) => s + d.importe, 0)
+  const totalManualDebo    = activas.filter((d) => d.tipo === 'debo').reduce((s, d) => s + d.importe, 0)
+
+  const totalMeDeben = totalAutoMeDeben + totalManualMeDeben
+  const totalDebo    = totalManualDebo
   const balance      = totalMeDeben - totalDebo
 
-  function handleSave(data: Omit<Deuda, 'id' | 'estado' | 'importePagado'>) {
+  function handleSaveManual(data: Omit<DeudaManual, 'id' | 'estado' | 'importePagado'>) {
     if (editingDeuda) {
       setDeudas((prev) => prev.map((d) => d.id === editingDeuda.id ? { ...d, ...data } : d))
       toast.success('Deuda actualizada')
     } else {
-      const nueva: Deuda = { ...data, id: `d-${uid()}`, estado: 'pendiente', importePagado: 0 }
-      setDeudas((prev) => [nueva, ...prev])
+      setDeudas((prev) => [{ ...data, id: `d-${uid()}`, estado: 'pendiente', importePagado: 0 }, ...prev])
       toast.success('Deuda añadida')
     }
     setShowModal(false)
@@ -315,11 +373,15 @@ export function DeudasView() {
     toast.success('Deuda eliminada')
   }
 
+  function handleLiquidar() {
+    toast.info(`Liquidación con ${partner?.display_name ?? 'tu pareja'} — próximamente podrás registrar el pago aquí`)
+  }
+
   return (
     <>
       <div className="px-6 pt-4 pb-6 space-y-5">
 
-        {/* Summary */}
+        {/* Resumen */}
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-teal-brand/10 rounded-[14px] border border-teal-brand/20 px-4 py-3 text-center">
             <p className="text-[10px] font-semibold text-teal-brand uppercase tracking-wide mb-1">Te deben</p>
@@ -340,33 +402,57 @@ export function DeudasView() {
           </div>
         </div>
 
-        {/* Nueva deuda button */}
-        <button
-          onClick={() => { setEditingDeuda(undefined); setShowModal(true) }}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-[12px] border border-dashed border-petroleo/30 text-sm font-medium text-petroleo hover:bg-petroleo/5 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Nueva deuda
-        </button>
-
-        {/* Active debts */}
-        {activas.length === 0 ? (
-          <div className="flex items-center justify-center h-24 rounded-[14px] border border-dashed border-border bg-secondary/30">
-            <p className="text-xs text-muted-foreground">Sin deudas activas</p>
-          </div>
-        ) : (
+        {/* Deudas automáticas de gastos compartidos */}
+        {partner && (
           <div className="space-y-2">
-            {activas.map((d) => (
-              <DeudaCard
-                key={d.id}
-                deuda={d}
-                onEdit={(deuda) => { setEditingDeuda(deuda); setShowModal(true) }}
-                onDelete={handleDelete}
-                onSaldar={handleSaldar}
-              />
-            ))}
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <Users className="w-3 h-3" />
+              Gastos compartidos 50-50
+            </p>
+            <CompartidosPanel
+              partnerName={partner.display_name}
+              gastos={gastosCompartidosMios.map((g) => ({
+                id:          g.id,
+                description: g.description,
+                amount:      g.amount,
+                date:        g.date,
+              }))}
+              onLiquidar={handleLiquidar}
+            />
           </div>
         )}
+
+        {/* Deudas manuales */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Deudas libres</p>
+            <button
+              onClick={() => { setEditingDeuda(undefined); setShowModal(true) }}
+              className="flex items-center gap-1 text-xs font-medium text-petroleo hover:text-teal-brand transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Nueva deuda
+            </button>
+          </div>
+
+          {activas.length === 0 ? (
+            <div className="flex items-center justify-center h-16 rounded-[14px] border border-dashed border-border bg-secondary/30">
+              <p className="text-xs text-muted-foreground">Sin deudas manuales activas</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {activas.map((d) => (
+                <DeudaManualCard
+                  key={d.id}
+                  deuda={d}
+                  onEdit={(deuda) => { setEditingDeuda(deuda); setShowModal(true) }}
+                  onDelete={handleDelete}
+                  onSaldar={handleSaldar}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Saldadas */}
         {saldadas.length > 0 && (
@@ -381,7 +467,7 @@ export function DeudasView() {
             {showSaldadas && (
               <div className="space-y-2">
                 {saldadas.map((d) => (
-                  <DeudaCard
+                  <DeudaManualCard
                     key={d.id}
                     deuda={d}
                     onEdit={(deuda) => { setEditingDeuda(deuda); setShowModal(true) }}
@@ -398,7 +484,7 @@ export function DeudasView() {
       {showModal && (
         <DeudaModal
           initial={editingDeuda}
-          onSave={handleSave}
+          onSave={handleSaveManual}
           onClose={() => { setShowModal(false); setEditingDeuda(undefined) }}
         />
       )}

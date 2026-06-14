@@ -103,9 +103,18 @@ El usuario elige tema en Ajustes: **claro / oscuro / seguir al sistema**. Por de
 - Pesos usados: 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
 - Importar desde Google Fonts
 
-### Estilo visual general — Glass futurista
+### Estilo visual general — Glass futurista ⚠️ OBLIGATORIO EN TODA LA APP
 
-El estilo de la app es **glass futurista**: fondos semitransparentes con backdrop-filter, orbes de color blur en el fondo, tarjetas con efecto cristal. Es el estilo principal de toda la app, no un detalle selectivo.
+> **Este es el estilo de diseño permanente y definitivo de Fatumsaurus. No es un detalle selectivo ni una mejora puntual. TODAS las páginas, TODOS los módulos y TODOS los componentes nuevos deben usar este estilo sin excepción. Si en algún momento el estilo parece plano o anticuado, es que se perdió el glass — hay que restaurarlo.**
+
+El estilo de la app es **glass futurista**: fondos semitransparentes con backdrop-filter, orbes de color blur en el fondo, tarjetas con efecto cristal.
+
+**Reglas que nunca se rompen:**
+- Cualquier panel, sección o bloque de contenido → clase `.glass` (NO `bg-card`, NO `bg-white`, NO `bg-secondary` para wrappers principales)
+- Cualquier tarjeta individual, item de lista, card de módulo → clase `.card-tech` (NO `bg-card border border-border`, NO `bg-white rounded-lg`)
+- Cualquier barra sticky/header → clase `.glass-subtle`
+- Los orbes de fondo están en `app/(app)/layout.tsx` y aplican a TODAS las páginas automáticamente — no añadir ni quitar orbes en páginas individuales
+- Nunca usar `bg-card` directamente en componentes de módulo — `card-tech` es el reemplazo siempre
 
 - **Fondo app:** `oklch(0.975 0.008 205)` — near-white con tinte frío muy sutil. Definido como `--background` en `globals.css`.
 - **Orbes de fondo:** tres círculos CSS con `filter: blur(80px)` en el layout principal (`app/(app)/layout.tsx`). Presentes en TODAS las páginas de la app, no solo el dashboard:
@@ -421,6 +430,57 @@ Hábito/tarea recurrente automático creado al configurar la app:
 - Aparece el día 1 de cada mes en Hábitos, Calendario y Dashboard
 - Al marcarlo como hecho redirige a: saldos de cuentas, valoraciones de inversiones, patrimonio neto
 - Notificación si llevan más de 35 días sin actualizarse
+
+---
+
+## 4C. ⚠️ INTEGRACIÓN FINANCIERA — PRINCIPIO CRÍTICO
+
+> **Este principio aplica a TODO el código. Nunca crear un gasto en un módulo sin conectarlo con la tabla `gastos` de Supabase. Nunca mostrar deudas sin calcularlas desde datos reales.**
+
+### Todos los gastos fluyen a Finanzas
+
+Cualquier módulo que genere un gasto (Salud, Hogar, Vehículos, Viajes, Trabajo, etc.) **DEBE** insertar una fila en la tabla `gastos` de Supabase. No hay gastos "de módulo" aislados. La tabla `gastos` es la única fuente de verdad financiera.
+
+Columnas clave de `gastos` que todos los módulos deben rellenar:
+- `origin`: slug del módulo origen (ej: `'salud'`, `'vehiculos'`, `'hogar'`)
+- `origin_id`: UUID del item origen (ej: UUID del bono, del vehículo, de la tarea)
+- `compartido`: `true` si el gasto es 50-50 con la pareja
+- `paid_by_id`: quién pagó el gasto
+
+### Sistema de deudas 50-50
+
+**Regla universal:** todos los gastos personales de Ainhoa son compartidos al 50% con su pareja (Germán) por defecto. Esto aplica a gastos personales (`paid_via = 'personal'`) marcados como `compartido = true`.
+
+**Cómo funciona:**
+- `compartido = true` + `paid_via = 'personal'` + `paid_by_id = yo` → **la pareja me debe `amount/2`**
+- `compartido = true` + `paid_via = 'personal'` + `paid_by_id = pareja` → **yo le debo `amount/2`**
+- `paid_via = 'conjunta'` → no genera deuda; el balance se calcula según contribuciones vs gastos en la pestaña Cuenta Conjunta
+
+**En el UI:**
+- El campo `compartido` se persiste en Supabase como columna booleana en la tabla `gastos`
+- El tipo `Gasto` (TypeScript) incluye `compartido?: boolean`
+- `NuevoGastoModal` y cualquier modal de gasto en módulos deben mostrar un toggle "50-50 con [nombre pareja]" activado por defecto cuando `paidVia === 'personal'` y el usuario tiene pareja configurada
+- La pestaña **Deudas** en Finanzas calcula automáticamente el balance desde los gastos reales de Supabase — NUNCA datos mock
+
+### Pestañas de Finanzas y su fuente de datos
+
+| Pestaña | Fuente de datos |
+|---------|----------------|
+| Gastos personales | `gastos` table, filtro `paid_via='personal' AND user_id=yo` |
+| Cuenta conjunta | `gastos` table, filtro `paid_via='conjunta'` + tabla de depósitos |
+| Tricount | `tricount_groups` + `tricount_gastos` tables |
+| Inversiones | `inversiones_productos` + `inversiones_aportaciones` + `inversiones_valoraciones` |
+| Suscripciones | `suscripciones` table |
+| **Deudas** | Calculadas automáticamente desde `gastos WHERE compartido=true` + tabla `deudas_manuales` para deudas libres |
+| Patrimonio neto | `patrimonio_cuentas` + inversiones + cuenta conjunta |
+
+### Reglas de implementación
+
+1. **Nunca `ALL_GASTOS = []` ni arrays mock en producción** — los datos de gastos siempre de `GastosContext` (que lee de Supabase)
+2. **`createBono()`, cualquier función que genere un gasto en otro módulo**, debe insertar en `gastos` primero y guardar el `gasto_id` en el registro origen para referencia cruzada
+3. **El campo `compartido` en `gastos` es el mecanismo de deuda automática** — si un módulo genera un gasto compartido, debe poner `compartido = true` en el insert
+4. **La pestaña Deudas es la vista consolidada** de todo lo que alguien te debe o tú debes, calculado automáticamente + deudas manuales opcionales
+5. **Liquidaciones**: cuando la pareja salda lo que debe, se registra un gasto de "liquidación" con importe negativo o se marca en una tabla dedicada `liquidaciones`. El balance se recalcula automáticamente.
 
 ---
 
@@ -1912,5 +1972,10 @@ Mejoras y funcionalidades que se han mencionado durante el diseño pero que no s
 
 ---
 
-*Última actualización: Junio 2026 — estilo glass futurista implementado (sección 3 ampliada), clases CSS glass documentadas, convenciones de código actualizadas (OKLCH, webkit caveat, suppressHydrationWarning, sin max-w en módulos), historial de decisiones de diseño añadido*  
+| Jun 2026 | Todos los gastos personales son 50-50 con la pareja por defecto | Ainhoa compartirá todos sus gastos con Germán. Toggle visible en NuevoGastoModal (activado por defecto cuando hay pareja configurada) |
+| Jun 2026 | Campo `compartido` en tipo `Gasto` y tabla `gastos` en Supabase | El mecanismo de deuda automática: si `compartido=true` y `paid_by_id=yo` → pareja debe `amount/2`. Calculado en DeudasView desde datos reales, no mocks |
+| Jun 2026 | DeudasView: sección "Gastos compartidos 50-50" calculada automáticamente | Lista los gastos con `compartido=true` del usuario, muestra cuánto debe la pareja. Botón "Registrar liquidación" para futura funcionalidad |
+| Jun 2026 | Principio crítico de integración financiera documentado en sección 4C | Cualquier módulo que genere un gasto DEBE insertar en `gastos` table. Deudas NUNCA son datos mock — siempre calculadas desde Supabase |
+
+*Última actualización: Junio 2026 — integración financiera completa (sección 4C añadida), DeudasView con cálculo automático de 50-50, campo `compartido` en tipo Gasto, toggle en NuevoGastoModal*  
 *Proyecto planificado y desarrollado con Claude Code (claude.ai)*

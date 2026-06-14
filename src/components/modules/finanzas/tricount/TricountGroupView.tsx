@@ -42,7 +42,7 @@ export function TricountGroupView({ group }: Props) {
   return (
     <div className="px-6 pt-4 pb-6 space-y-6">
       {/* Group summary */}
-      <div className="bg-card rounded-[16px] border border-border shadow-[0_2px_12px_rgba(0,18,25,0.08)] p-5">
+      <div className="glass rounded-[16px] p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Participantes</p>
@@ -87,7 +87,7 @@ export function TricountGroupView({ group }: Props) {
             className={cn(
               'px-4 py-1.5 text-sm font-medium rounded-[8px] capitalize transition-colors',
               tab === t
-                ? 'bg-card text-foreground shadow-sm'
+                ? 'bg-white/70 text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
@@ -114,7 +114,7 @@ export function TricountGroupView({ group }: Props) {
             return (
               <div
                 key={expense.id}
-                className="flex items-center gap-4 bg-card rounded-[12px] border border-border px-4 py-3 shadow-[0_1px_8px_rgba(0,18,25,0.06)]"
+                className="flex items-center gap-4 card-tech px-4 py-3"
               >
                 <UserAvatar userId={expense.paidById} size="sm" />
                 <div className="flex-1 min-w-0">
@@ -136,7 +136,7 @@ export function TricountGroupView({ group }: Props) {
       {tab === 'balances' && (
         <div className="space-y-4">
           {/* Per-person net */}
-          <div className="bg-card rounded-[16px] border border-border shadow-[0_2px_12px_rgba(0,18,25,0.08)] overflow-hidden">
+          <div className="glass rounded-[16px] overflow-hidden">
             <div className="px-5 py-3 border-b border-border">
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Resumen por persona</p>
             </div>
@@ -179,7 +179,7 @@ export function TricountGroupView({ group }: Props) {
 
           {/* Settlements */}
           {settlements.length > 0 && (
-            <div className="bg-card rounded-[16px] border border-border shadow-[0_2px_12px_rgba(0,18,25,0.08)] overflow-hidden">
+            <div className="glass rounded-[16px] overflow-hidden">
               <div className="px-5 py-3 border-b border-border">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   {group.settled ? 'Liquidaciones completadas' : 'Liquidaciones pendientes'}

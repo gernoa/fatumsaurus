@@ -285,7 +285,7 @@ export function InversionesView() {
               onClick={() => setView(v)}
               className={cn(
                 'flex-1 py-2 text-xs font-semibold rounded-[9px] transition-all',
-                view === v ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                view === v ? 'bg-white/70 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               {viewLabels[v]}

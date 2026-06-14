@@ -134,7 +134,7 @@ export function PatrimonioView() {
           </p>
           <a
             href="/finanzas/inversiones"
-            className="flex items-center justify-between h-14 px-4 rounded-[14px] bg-card border border-border hover:border-petroleo/40 hover:shadow-[0_2px_12px_rgba(0,95,115,0.08)] transition-all group"
+            className="flex items-center justify-between h-14 px-4 card-tech group"
           >
             <span className="flex items-center gap-2 text-sm font-medium text-foreground">
               <span className="text-base">📈</span>

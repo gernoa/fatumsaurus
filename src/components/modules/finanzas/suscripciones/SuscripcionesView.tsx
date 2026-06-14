@@ -123,7 +123,7 @@ export function SuscripcionesView() {
               onClick={() => setFilter(f)}
               className={cn(
                 'flex-1 py-1.5 text-xs font-semibold rounded-[9px] transition-all capitalize',
-                filter === f ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                filter === f ? 'bg-white/70 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               {f === 'todas' ? 'Todas' : f === 'compartidas' ? 'Compartidas' : 'Solo mías'}
@@ -243,8 +243,8 @@ function SuscripcionRow({
 
   return (
     <div className={cn(
-      'bg-card rounded-[14px] border px-4 py-3 flex items-center gap-3 transition-all',
-      muted ? 'border-border opacity-50' : 'border-border hover:border-petroleo/20 hover:shadow-[0_2px_10px_rgba(0,18,25,0.07)]'
+      'card-tech px-4 py-3 flex items-center gap-3 transition-all',
+      muted ? 'opacity-50' : ''
     )}>
       {/* Color dot + icon */}
       <div

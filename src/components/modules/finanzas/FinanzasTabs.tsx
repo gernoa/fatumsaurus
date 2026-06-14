@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 const TABS = [
   { label: 'Resumen',     href: '/finanzas',             exact: true  },
   { label: 'Gastos',      href: '/finanzas/gastos',      exact: false },
-  { label: 'Conjunta',    href: '/finanzas/conjunta',    exact: false },
+  { label: 'Análisis',    href: '/finanzas/analisis',    exact: false },
   { label: 'Inversiones', href: '/finanzas/inversiones', exact: false },
   { label: 'Patrimonio',  href: '/finanzas/patrimonio',  exact: false },
   { label: 'Deudas',      href: '/finanzas/deudas',      exact: false },
