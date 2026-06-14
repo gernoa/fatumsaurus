@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, AlertCircle } from 'lucide-react'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
@@ -60,8 +61,9 @@ export function NuevoBonoModal({ especialista, onSaved, onClose }: Props) {
       onSaved(bono)
       toast.success('Bono añadido y gasto registrado en Finanzas')
       onClose()
-    } catch {
-      toast.error('No se pudo guardar el bono')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      toast.error(`No se pudo guardar el bono: ${msg}`)
     } finally {
       setSaving(false)
     }
@@ -82,6 +84,20 @@ export function NuevoBonoModal({ especialista, onSaved, onClose }: Props) {
         </div>
 
         <div className="p-5 space-y-4">
+          {/* Aviso si la pareja no está configurada */}
+          {!partner && (
+            <div className="flex items-start gap-2 bg-ambar/10 border border-ambar/25 rounded-[10px] px-3 py-2.5">
+              <AlertCircle className="w-4 h-4 text-ambar flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-foreground leading-relaxed">
+                No tienes pareja configurada.{' '}
+                <Link href="/ajustes" onClick={onClose} className="font-semibold underline">
+                  Configúrala en Ajustes
+                </Link>{' '}
+                para que el 50-50 muestre el nombre correcto.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Nº sesiones</label>

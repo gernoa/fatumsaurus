@@ -50,16 +50,23 @@ function SesionRow({
   onDelete:          (s: Sesion) => void
   onToggleRealizada: (id: string, val: boolean) => void
 }) {
+  const TODAY = new Date().toISOString().split('T')[0]
+  const isFuture = s.fecha > TODAY
+  // Una sesión futura no puede marcarse como realizada
+  const canToggle = !isFuture || s.realizada
+
   return (
     <div className="flex items-center gap-2 py-1.5 group">
       {/* Checkbox realizada */}
       <button
-        onClick={() => onToggleRealizada(s.id, !s.realizada)}
+        onClick={() => canToggle && onToggleRealizada(s.id, !s.realizada)}
+        disabled={!canToggle}
         className={cn(
           'w-4 h-4 rounded-[4px] border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+          !canToggle && 'opacity-30 cursor-not-allowed',
           s.realizada ? 'bg-teal-brand border-teal-brand' : 'border-border bg-background hover:border-teal-brand/50'
         )}
-        title={s.realizada ? 'Marcar como prevista' : 'Marcar como realizada'}
+        title={!canToggle ? 'La fecha aún no ha pasado' : s.realizada ? 'Marcar como prevista' : 'Marcar como realizada'}
       >
         {s.realizada && (
           <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none">

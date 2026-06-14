@@ -118,7 +118,7 @@ function UpcomingRecurring({ gastos, onRegister }: { gastos: Gasto[]; onRegister
 // ─── Main view ────────────────────────────────────────────────────────────────
 
 export function GastosView() {
-  const { gastos: allGastos, addGasto, updateGasto, advanceRecurring } = useGastos()
+  const { gastos: allGastos, loading, addGasto, updateGasto, advanceRecurring } = useGastos()
   const { currentUser } = useUsers()
 
   const [year,  setYear]  = useState(NOW.getFullYear())
@@ -155,7 +155,10 @@ export function GastosView() {
       updateGasto(g)
       toast.success('Gasto actualizado')
     } else {
+      const t = toast.loading('Guardando...')
       addGasto(g)
+        .then(() => toast.success('Gasto guardado', { id: t }))
+        .catch(() => toast.error('Error al guardar', { id: t }))
       // If registering a recurring, advance the template's nextDate
       if (prevEditingId === undefined) {
         const template = allGastos.find(

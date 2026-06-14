@@ -9,7 +9,6 @@ import {
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
 import {
-  ALL_GASTOS,
   personalGastos,
   conjuntaGastos,
   filterByMonth,
@@ -19,6 +18,7 @@ import {
 import { useUsers } from '@/lib/users'
 import { usePatrimonio } from '@/contexts/patrimonioContext'
 import { useInversiones } from '@/contexts/inversionesContext'
+import { useGastos } from '@/contexts/gastosContext'
 import { getPortfolioTotals, getProductStats } from '@/lib/inversiones'
 import { MOCK_DEPOSITS } from '@/lib/mock-conjunta'
 
@@ -90,18 +90,19 @@ export function FinanzasResumenView() {
   const { accounts }                             = usePatrimonio()
   const { currentUser }                          = useUsers()
   const { products, aportaciones, valoraciones } = useInversiones()
+  const { gastos: allGastos }                    = useGastos()
 
   // Gastos personales este mes
-  const thisMonth   = useMemo(() => filterByMonth(personalGastos(ALL_GASTOS), TODAY_YEAR, TODAY_MONTH), [])
-  const lastMonth   = useMemo(() => filterByMonth(personalGastos(ALL_GASTOS), TODAY_YEAR, TODAY_MONTH - 1), [])
+  const thisMonth   = useMemo(() => filterByMonth(personalGastos(allGastos, currentUser.id), TODAY_YEAR, TODAY_MONTH), [allGastos, currentUser.id])
+  const lastMonth   = useMemo(() => filterByMonth(personalGastos(allGastos, currentUser.id), TODAY_YEAR, TODAY_MONTH - 1), [allGastos, currentUser.id])
   const thisTotal   = totalAmount(thisMonth)
   const lastTotal   = totalAmount(lastMonth)
-  const gastosEmpty = ALL_GASTOS.length === 0
+  const gastosEmpty = allGastos.length === 0
 
   // Cuenta conjunta
   const conjuntaAcc = accounts.find((a) => a.type === 'conjunta' && a.isActive)
   const depositsTotal = MOCK_DEPOSITS.reduce((s, d) => s + d.amount, 0)
-  const conjuntaGastosTotal = totalAmount(conjuntaGastos(ALL_GASTOS))
+  const conjuntaGastosTotal = totalAmount(conjuntaGastos(allGastos))
   const conjuntaBalance = depositsTotal - conjuntaGastosTotal
   const conjuntaEmpty = !conjuntaAcc || (depositsTotal === 0 && conjuntaGastosTotal === 0)
 
@@ -120,8 +121,8 @@ export function FinanzasResumenView() {
   const deudasEmpty = true
 
   // Recurrentes próximos (todos los gastos con recurring.nextDate en los próximos 30 días)
-  const today = new Date('2026-06-13')
-  const proximosRecurrentes = ALL_GASTOS
+  const today = new Date()
+  const proximosRecurrentes = allGastos
     .filter((g) => g.recurring)
     .filter((g) => {
       const d = new Date(g.recurring!.nextDate)

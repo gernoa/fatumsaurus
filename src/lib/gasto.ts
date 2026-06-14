@@ -146,6 +146,57 @@ export function thirdPartyDebts(all: Gasto[]): ThirdPartyDebt[] {
 
 function round2(n: number) { return Math.round(n * 100) / 100 }
 
-// ─── Datos iniciales (vacíos — añade los tuyos desde la app) ────────────────────
+// ─── Datos iniciales (vacíos — los gastos reales vienen de Supabase) ─────────
 
 export const ALL_GASTOS: Gasto[] = []
+
+// ─── Supabase ↔ local mapping ─────────────────────────────────────────────────
+
+export interface GastoRow {
+  id:          string
+  user_id:     string
+  paid_by_id:  string | null
+  description: string
+  amount:      number
+  date:        string
+  category:    string
+  paid_via:    string
+  compartido:  boolean
+  origin:      string | null
+  origin_id:   string | null
+  notes:       string | null
+  created_at:  string
+}
+
+export function dbToGasto(row: GastoRow): Gasto {
+  return {
+    id:          row.id,
+    description: row.description,
+    amount:      Number(row.amount),
+    date:        row.date,
+    category:    (row.category ?? 'otro') as GastoCategory,
+    paidById:    row.paid_by_id ?? row.user_id,
+    paidVia:     (row.paid_via ?? 'personal') as PagoOrigen,
+    notes:       row.notes ?? undefined,
+    thirdParty:  [],
+  }
+}
+
+export function gastoToDbInsert(
+  g: Gasto,
+  userId: string
+): Omit<GastoRow, 'id' | 'created_at'> {
+  return {
+    user_id:     userId,
+    paid_by_id:  g.paidById || userId,
+    description: g.description,
+    amount:      g.amount,
+    date:        g.date,
+    category:    g.category,
+    paid_via:    g.paidVia,
+    compartido:  g.paidVia === 'conjunta',
+    origin:      null,
+    origin_id:   null,
+    notes:       g.notes ?? null,
+  }
+}
