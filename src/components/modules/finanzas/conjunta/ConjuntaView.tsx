@@ -644,6 +644,7 @@ export function ConjuntaView() {
             category:    'otro',
             paidById:    currentUser.id,
             paidVia:     'conjunta',
+            compartido:  false,
             accountId:   selectedAccount?.id,
             thirdParty:  [],
           }}
