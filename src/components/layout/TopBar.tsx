@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Bell, Settings, LogOut } from 'lucide-react'
@@ -9,13 +9,14 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useSession } from '@/contexts/sessionContext'
 
-// Mock hasta que el sistema de notificaciones esté implementado
 const MOCK_NOTIFICATIONS = { urgent: 0, pending: 0 }
 
 export function TopBar() {
   const { user }  = useSession()
   const router    = useRouter()
+  const avatarRef = useRef<HTMLButtonElement>(null)
   const [menuOpen,   setMenuOpen]   = useState(false)
+  const [dropPos,    setDropPos]    = useState({ top: 0, right: 0 })
   const [loggingOut, setLoggingOut] = useState(false)
 
   const { urgent, pending } = MOCK_NOTIFICATIONS
@@ -23,8 +24,18 @@ export function TopBar() {
   const badgeCount = urgent > 0 ? urgent : pending
   const badgeColor = urgent > 0 ? 'bg-rojo-tierra' : 'bg-ambar'
 
-  // Inicial del usuario para el avatar
   const initial = user.display_name.charAt(0).toUpperCase()
+
+  const openMenu = useCallback(() => {
+    const rect = avatarRef.current?.getBoundingClientRect()
+    if (rect) {
+      setDropPos({
+        top:   rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      })
+    }
+    setMenuOpen(true)
+  }, [])
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -42,7 +53,7 @@ export function TopBar() {
 
   return (
     <header
-      className="flex-shrink-0 flex items-center justify-end px-6 border-b border-border/60 glass-subtle sticky top-0"
+      className="flex-shrink-0 flex items-center justify-end px-6 border-b border-border/60 glass-subtle"
       style={{ height: 'var(--topbar-height)', zIndex: 'var(--z-sticky)' }}
     >
       <div className="flex items-center gap-3">
@@ -68,7 +79,8 @@ export function TopBar() {
         {/* Avatar + dropdown */}
         <div className="relative">
           <button
-            onClick={() => setMenuOpen((v) => !v)}
+            ref={avatarRef}
+            onClick={menuOpen ? () => setMenuOpen(false) : openMenu}
             disabled={loggingOut}
             className={cn(
               'w-8 h-8 rounded-full bg-petroleo text-white',
@@ -89,22 +101,26 @@ export function TopBar() {
 
           {menuOpen && (
             <>
-              {/* Backdrop — captura clics fuera del menú */}
+              {/* Backdrop — fixed, cubre toda la pantalla */}
               <div
                 className="fixed inset-0"
                 style={{ zIndex: 'var(--z-dropdown-backdrop)' }}
                 onClick={() => setMenuOpen(false)}
               />
 
-              {/* Dropdown */}
+              {/* Dropdown — position: fixed para no quedar detrás de sticky headers */}
               <div
                 className={cn(
-                  'absolute right-0 top-full mt-2 w-48',
+                  'fixed w-48',
                   'glass rounded-[12px]',
-                  'shadow-[0_8px_32px_oklch(0_0_0/0.14)]',
+                  'shadow-[0_8px_32px_oklch(0_0_0/0.18)]',
                   'py-1.5 overflow-hidden'
                 )}
-                style={{ zIndex: 'var(--z-dropdown)' }}
+                style={{
+                  top:   dropPos.top,
+                  right: dropPos.right,
+                  zIndex: 'var(--z-modal)',   /* z-modal (400) asegura que siempre esté al frente */
+                }}
                 role="menu"
               >
                 {/* Nombre + email */}
@@ -117,7 +133,7 @@ export function TopBar() {
                   href="/ajustes"
                   role="menuitem"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary/60 transition-colors"
                 >
                   <Settings className="w-4 h-4 text-muted-foreground" />
                   Ajustes
@@ -126,7 +142,7 @@ export function TopBar() {
                 <button
                   role="menuitem"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rojo-tierra hover:bg-secondary transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rojo-tierra hover:bg-secondary/60 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   Cerrar sesión

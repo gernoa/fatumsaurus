@@ -7,6 +7,7 @@ import { ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MODULE_GROUPS, MODULES, MOCK_FAVORITES, MODULE_COLOR_NEUTRAL } from '@/lib/constants'
 import type { ModuleDefinition } from '@/lib/constants'
+import { useModuleColors } from '@/contexts/moduleColorsContext'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -138,7 +139,10 @@ interface NavItemProps {
 }
 
 function NavItem({ mod, active, collapsed }: NavItemProps) {
+  const { getColor } = useModuleColors()
   const Icon = mod.icon
+  const modColor = getColor(mod.slug)
+
   return (
     <Link
       href={mod.href}
@@ -154,19 +158,10 @@ function NavItem({ mod, active, collapsed }: NavItemProps) {
           : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-[var(--sidebar-item-hover-bg)]'
       )}
     >
-      <div
-        className="w-4 h-4 flex-shrink-0 flex items-center justify-center"
-        style={{ color: active ? 'var(--arena)' : undefined }}
-      >
-        <Icon
-          className="w-4 h-4"
-          style={{
-            color: active
-              ? 'inherit'
-              : MODULE_COLOR_NEUTRAL,
-          }}
-        />
-      </div>
+      <Icon
+        className="w-4 h-4 flex-shrink-0"
+        style={{ color: active ? 'var(--arena)' : (modColor ?? MODULE_COLOR_NEUTRAL) }}
+      />
       {!collapsed && <span className="truncate">{mod.name}</span>}
     </Link>
   )

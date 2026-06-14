@@ -1,8 +1,12 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import {
+  createContext, useContext, useState, useCallback, useEffect,
+} from 'react'
+import { MODULE_GROUPS } from '@/lib/constants'
 
-// Los 17 tonos de la paleta curada de Fatumsaurus (CLAUDE.md §3)
+// ─── Palette ──────────────────────────────────────────────────────────────────
+
 export const MODULE_PALETTE = [
   { name: 'Noche',    hex: '#001219' },
   { name: 'Abismo',   hex: '#004E60' },
@@ -25,33 +29,115 @@ export const MODULE_PALETTE = [
 
 export type PaletteColor = typeof MODULE_PALETTE[number]
 
-// null = sin color → muestra gris neutro
-type ModuleColors = Record<string, string | null>
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface StoredPrefs {
+  colors:  Record<string, string | null>   // slug → hex | null
+  enabled: Record<string, boolean>         // slug → true/false
+  groups:  Record<string, string | null>   // slug → groupId override | null = default
+}
 
 interface ModuleColorsCtx {
-  colors:       ModuleColors
+  // Colors
   getColor:     (slug: string) => string | null
   setColor:     (slug: string, hex: string | null) => void
   isColorTaken: (hex: string, excludeSlug?: string) => boolean
+
+  // Enabled
+  isEnabled:  (slug: string, canDisable: boolean) => boolean
+  setEnabled: (slug: string, val: boolean) => void
+
+  // Groups (override)
+  getGroup:   (slug: string) => string | null   // override or null = default
+  setGroup:   (slug: string, groupId: string | null) => void
+
+  // All group ids available (default + custom user-created)
+  allGroupIds: { id: string; label: string }[]
+  addGroup:    (id: string, label: string) => void
 }
 
 const Ctx = createContext<ModuleColorsCtx | null>(null)
 
+const STORAGE_KEY = 'fatumsaurus-module-prefs'
+
+function defaultPrefs(): StoredPrefs {
+  return { colors: {}, enabled: {}, groups: {} }
+}
+
+function loadPrefs(): StoredPrefs {
+  if (typeof window === 'undefined') return defaultPrefs()
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return defaultPrefs()
+    return { ...defaultPrefs(), ...(JSON.parse(raw) as Partial<StoredPrefs>) }
+  } catch {
+    return defaultPrefs()
+  }
+}
+
+// ─── Provider ─────────────────────────────────────────────────────────────────
+
 export function ModuleColorsProvider({ children }: { children: React.ReactNode }) {
-  const [colors, setColors] = useState<ModuleColors>({})
+  const [prefs, setPrefs] = useState<StoredPrefs>(defaultPrefs)
+  const [customGroups, setCustomGroups] = useState<{ id: string; label: string }[]>([])
 
-  const getColor = useCallback((slug: string) => colors[slug] ?? null, [colors])
-
-  const setColor = useCallback((slug: string, hex: string | null) => {
-    setColors((prev) => ({ ...prev, [slug]: hex }))
+  // Load from localStorage on mount (client only)
+  useEffect(() => {
+    setPrefs(loadPrefs())
+    try {
+      const raw = localStorage.getItem('fatumsaurus-custom-groups')
+      if (raw) setCustomGroups(JSON.parse(raw) as { id: string; label: string }[])
+    } catch { /* ignore */ }
   }, [])
 
-  const isColorTaken = useCallback((hex: string, excludeSlug?: string) => {
-    return Object.entries(colors).some(([slug, c]) => c === hex && slug !== excludeSlug)
-  }, [colors])
+  function persist(next: StoredPrefs) {
+    setPrefs(next)
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch { /* ignore */ }
+  }
+
+  const getColor = useCallback((slug: string) => prefs.colors[slug] ?? null, [prefs])
+
+  const setColor = useCallback((slug: string, hex: string | null) => {
+    persist({ ...prefs, colors: { ...prefs.colors, [slug]: hex } })
+  }, [prefs])
+
+  const isColorTaken = useCallback((hex: string, excludeSlug?: string) =>
+    Object.entries(prefs.colors).some(([slug, c]) => c === hex && slug !== excludeSlug),
+  [prefs])
+
+  const isEnabled = useCallback((slug: string, canDisable: boolean) => {
+    if (!canDisable) return true
+    return prefs.enabled[slug] !== false  // default: enabled
+  }, [prefs])
+
+  const setEnabled = useCallback((slug: string, val: boolean) => {
+    persist({ ...prefs, enabled: { ...prefs.enabled, [slug]: val } })
+  }, [prefs])
+
+  const getGroup = useCallback((slug: string) => prefs.groups[slug] ?? null, [prefs])
+
+  const setGroup = useCallback((slug: string, groupId: string | null) => {
+    persist({ ...prefs, groups: { ...prefs.groups, [slug]: groupId } })
+  }, [prefs])
+
+  const allGroupIds = [
+    ...MODULE_GROUPS.map((g) => ({ id: g.id, label: g.label })),
+    ...customGroups,
+  ]
+
+  const addGroup = useCallback((id: string, label: string) => {
+    const next = [...customGroups, { id, label }]
+    setCustomGroups(next)
+    try { localStorage.setItem('fatumsaurus-custom-groups', JSON.stringify(next)) } catch { /* ignore */ }
+  }, [customGroups])
 
   return (
-    <Ctx.Provider value={{ colors, getColor, setColor, isColorTaken }}>
+    <Ctx.Provider value={{
+      getColor, setColor, isColorTaken,
+      isEnabled, setEnabled,
+      getGroup, setGroup,
+      allGroupIds, addGroup,
+    }}>
       {children}
     </Ctx.Provider>
   )
