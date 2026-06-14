@@ -53,8 +53,10 @@ export interface Sesion {
   especialista_id: string
   user_id:         string
   fecha:           string
+  hora:            string | null
   duracion:        number
   notas:           string | null
+  realizada:       boolean
   pagado_via:      PagadoVia | null
   gasto_id:        string | null
   created_at:      string
@@ -286,13 +288,51 @@ export async function deleteEspecialista(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function updateSesion(
+  id:      string,
+  payload: Partial<Pick<Sesion, 'fecha' | 'hora' | 'duracion' | 'notas' | 'realizada' | 'pagado_via'>>
+): Promise<Sesion> {
+  const sb = createClient()
+  const { data, error } = await sb
+    .from('salud_sesiones')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data as Sesion
+}
+
+export async function toggleRealizada(id: string, realizada: boolean): Promise<Sesion> {
+  const sb = createClient()
+  const { data, error } = await sb
+    .from('salud_sesiones')
+    .update({ realizada })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data as Sesion
+}
+
+export async function deleteSesion(id: string, gastoId?: string | null): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.from('salud_sesiones').delete().eq('id', id)
+  if (error) throw error
+  if (gastoId) {
+    await sb.from('gastos').delete().eq('id', gastoId)
+  }
+}
+
 export async function registrarSesion(payload: {
   especialista_id:     string
   especialista_nombre: string
   especialista_tipo:   string
   fecha:               string
+  hora?:               string | null
   duracion:            number
   notas?:              string
+  realizada?:          boolean
   pagado_via?:         PagadoVia   // solo para por_sesion
   precio?:             number       // solo para por_sesion
 }): Promise<Sesion> {
@@ -324,8 +364,10 @@ export async function registrarSesion(payload: {
       especialista_id: payload.especialista_id,
       user_id:         user.id,
       fecha:           payload.fecha,
+      hora:            payload.hora ?? null,
       duracion:        payload.duracion,
       notas:           payload.notas ?? null,
+      realizada:       payload.realizada ?? false,
       pagado_via:      payload.pagado_via ?? null,
       gasto_id:        gastoId,
     })

@@ -1,13 +1,18 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, ChevronDown, ChevronUp, Clock, TrendingUp, Zap, Users2, Trash2 } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, Clock, TrendingUp, Zap, Users2, Trash2, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
-import { getEspecialistas, deleteEspecialista, type Especialista, type Sesion, type Bono } from '@/lib/salud'
+import { useSession } from '@/contexts/sessionContext'
+import {
+  getEspecialistas, deleteEspecialista, toggleRealizada, deleteSesion,
+  type Especialista, type Sesion, type Bono,
+} from '@/lib/salud'
 import { NuevoEspecialistaModal } from './NuevoEspecialistaModal'
-import { NuevoBonoModal } from './NuevoBonoModal'
-import { RegistrarSesionModal } from './RegistrarSesionModal'
+import { NuevoBonoModal }         from './NuevoBonoModal'
+import { RegistrarSesionModal }   from './RegistrarSesionModal'
 
 function formatMinutos(min: number): string {
   const h = Math.floor(min / 60)
@@ -23,36 +28,124 @@ function formatFechaCorta(fecha: string): string {
   })
 }
 
+function formatHora(hora: string | null | undefined): string {
+  if (!hora) return ''
+  return hora.slice(0, 5)  // "HH:MM"
+}
+
 function iniciales(nombre: string): string {
   return nombre.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()
+}
+
+// ─── Session row ───────────────────────────────────────────────────────────────
+
+function SesionRow({
+  s,
+  onEdit,
+  onDelete,
+  onToggleRealizada,
+}: {
+  s:                 Sesion
+  onEdit:            (s: Sesion) => void
+  onDelete:          (s: Sesion) => void
+  onToggleRealizada: (id: string, val: boolean) => void
+}) {
+  return (
+    <div className="flex items-center gap-2 py-1.5 group">
+      {/* Checkbox realizada */}
+      <button
+        onClick={() => onToggleRealizada(s.id, !s.realizada)}
+        className={cn(
+          'w-4 h-4 rounded-[4px] border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+          s.realizada ? 'bg-teal-brand border-teal-brand' : 'border-border bg-background hover:border-teal-brand/50'
+        )}
+        title={s.realizada ? 'Marcar como prevista' : 'Marcar como realizada'}
+      >
+        {s.realizada && (
+          <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </button>
+
+      {/* Fecha + hora */}
+      <div className="flex items-center gap-1.5 text-sm min-w-0 flex-1">
+        <Clock className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground/60" />
+        <span className={cn('text-sm', s.realizada ? 'text-foreground' : 'text-muted-foreground/70')}>
+          {formatFechaCorta(s.fecha)}
+        </span>
+        {s.hora && (
+          <span className="text-xs text-muted-foreground/60">{formatHora(s.hora)}</span>
+        )}
+        {!s.realizada && (
+          <span className="text-[10px] font-medium text-ambar bg-ambar/10 px-1.5 py-0.5 rounded-full flex-shrink-0">
+            Prevista
+          </span>
+        )}
+        {s.notas && (
+          <span className="text-xs text-muted-foreground/60 truncate min-w-0">· {s.notas}</span>
+        )}
+      </div>
+
+      <span className="text-sm text-muted-foreground flex-shrink-0">{formatMinutos(s.duracion)}</span>
+
+      {/* Acciones (aparecen en hover) */}
+      <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={() => onEdit(s)}
+          className="p-1 rounded-[6px] text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Editar sesión"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={() => onDelete(s)}
+          className="p-1 rounded-[6px] text-muted-foreground hover:text-rojo-tierra hover:bg-secondary transition-colors"
+          title="Eliminar sesión"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  )
 }
 
 // ─── Bono card ─────────────────────────────────────────────────────────────────
 
 function BonoCard({
   esp,
+  partnerName,
   onDelete,
   onSesionAdded,
+  onSesionUpdated,
+  onSesionDeleted,
   onBonoAdded,
 }: {
-  esp:          Especialista
-  onDelete:     (id: string) => void
-  onSesionAdded:(id: string, s: Sesion) => void
-  onBonoAdded:  (id: string, b: Bono) => void
+  esp:             Especialista
+  partnerName:     string
+  onDelete:        (id: string) => void
+  onSesionAdded:   (id: string, s: Sesion) => void
+  onSesionUpdated: (id: string, s: Sesion) => void
+  onSesionDeleted: (id: string, sesionId: string) => void
+  onBonoAdded:     (id: string, b: Bono) => void
 }) {
   const [bonosOpen,   setBonosOpen]   = useState(false)
   const [histOpen,    setHistOpen]    = useState(false)
   const [sesionModal, setSesionModal] = useState(false)
+  const [editSesion,  setEditSesion]  = useState<Sesion | null>(null)
   const [bonoModal,   setBonoModal]   = useState(false)
   const [confirm,     setConfirm]     = useState(false)
 
-  const bonos   = esp.bonos   ?? []
-  const sesiones= esp.sesiones?? []
+  const bonos    = esp.bonos    ?? []
+  const sesiones = esp.sesiones ?? []
 
-  // Totales agregados de todos los bonos
+  // Solo sesiones realizadas consumen tiempo del bono
+  const realizadas = sesiones.filter((s) => s.realizada)
+  const previstas  = sesiones.filter((s) => !s.realizada)
+
   const totalMinBonos  = bonos.reduce((acc, b) => acc + b.sesiones_contratadas * esp.duracion_sesion, 0)
   const totalInvertido = bonos.reduce((acc, b) => acc + b.precio_total, 0)
-  const consumido      = sesiones.reduce((acc, s) => acc + s.duracion, 0)
+  const consumido      = realizadas.reduce((acc, s) => acc + s.duracion, 0)
   const restante       = Math.max(totalMinBonos - consumido, 0)
   const pct            = totalMinBonos > 0 ? Math.min((consumido / totalMinBonos) * 100, 100) : 0
   const costePorMin    = totalMinBonos > 0 ? totalInvertido / totalMinBonos : 0
@@ -62,6 +155,25 @@ function BonoCard({
   const warning  = pct >= 75
   const danger   = pct >= 90
   const barColor = danger ? '#AE2012' : warning ? '#EE9B00' : '#0A9396'
+
+  async function handleToggle(sesionId: string, val: boolean) {
+    try {
+      const updated = await toggleRealizada(sesionId, val)
+      onSesionUpdated(esp.id, updated)
+    } catch {
+      toast.error('No se pudo actualizar')
+    }
+  }
+
+  async function handleDeleteSesion(s: Sesion) {
+    try {
+      await deleteSesion(s.id, s.gasto_id ?? undefined)
+      onSesionDeleted(esp.id, s.id)
+      toast.success('Sesión eliminada')
+    } catch {
+      toast.error('No se pudo eliminar la sesión')
+    }
+  }
 
   return (
     <>
@@ -80,7 +192,7 @@ function BonoCard({
               {totalInvertido > 0 && (
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Total invertido: <span className="font-semibold text-foreground">{formatCurrency(totalInvertido)}</span>
-                  <span className="ml-1 text-muted-foreground/70">· pareja te debe {formatCurrency(totalInvertido / 2)}</span>
+                  <span className="ml-1 text-muted-foreground/70">· {partnerName} te debe {formatCurrency(totalInvertido / 2)}</span>
                 </p>
               )}
             </div>
@@ -136,7 +248,7 @@ function BonoCard({
                     </div>
                   ))}
                   <div className="pt-2 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>50-50 con pareja → te deben</span>
+                    <span>50-50 con {partnerName} → te deben</span>
                     <span className="font-semibold text-teal-brand">{formatCurrency(totalInvertido / 2)}</span>
                   </div>
                 </div>
@@ -158,7 +270,12 @@ function BonoCard({
           {totalMinBonos > 0 && (
             <div>
               <div className="flex items-center justify-between mb-1.5 text-xs text-muted-foreground">
-                <span>{formatMinutos(consumido)} consumidos</span>
+                <span>
+                  {formatMinutos(consumido)} realizados
+                  {previstas.length > 0 && (
+                    <span className="ml-1.5 text-ambar">+ {previstas.length} previstas</span>
+                  )}
+                </span>
                 <span>{formatMinutos(totalMinBonos)} totales</span>
               </div>
               <div className="h-2.5 bg-border/50 rounded-full overflow-hidden">
@@ -173,7 +290,7 @@ function BonoCard({
             </div>
           )}
 
-          {/* Stats agregados */}
+          {/* Stats */}
           {totalMinBonos > 0 && (
             <div className="grid grid-cols-3 gap-2">
               <div className="glass-subtle rounded-[10px] p-2.5 text-center">
@@ -213,7 +330,7 @@ function BonoCard({
             )}
           </div>
 
-          {/* Confirmar borrado */}
+          {/* Confirmar borrado especialista */}
           {confirm && (
             <div className="pt-3 border-t border-border/50 flex items-center gap-3">
               <p className="text-xs text-muted-foreground flex-1">¿Eliminar especialista y sus bonos?</p>
@@ -224,19 +341,18 @@ function BonoCard({
 
           {/* Historial de sesiones */}
           {histOpen && sesiones.length > 0 && (
-            <div className="pt-3 border-t border-border/50 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Sesiones ({sesiones.length})
+            <div className="pt-3 border-t border-border/50 space-y-0.5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Sesiones ({realizadas.length} realizadas{previstas.length > 0 ? ` · ${previstas.length} previstas` : ''})
               </p>
-              {sesiones.map((s, i) => (
-                <div key={s.id || i} className="flex items-center justify-between text-sm py-1">
-                  <div className="flex items-center gap-2 text-muted-foreground min-w-0">
-                    <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span>{formatFechaCorta(s.fecha)}</span>
-                    {s.notas && <span className="text-muted-foreground/60 text-xs truncate">· {s.notas}</span>}
-                  </div>
-                  <span className="text-muted-foreground flex-shrink-0">{formatMinutos(s.duracion)}</span>
-                </div>
+              {sesiones.map((s) => (
+                <SesionRow
+                  key={s.id}
+                  s={s}
+                  onEdit={setEditSesion}
+                  onDelete={handleDeleteSesion}
+                  onToggleRealizada={handleToggle}
+                />
               ))}
             </div>
           )}
@@ -248,6 +364,14 @@ function BonoCard({
           especialista={esp}
           onSaved={(s) => onSesionAdded(esp.id, s)}
           onClose={() => setSesionModal(false)}
+        />
+      )}
+      {editSesion && (
+        <RegistrarSesionModal
+          especialista={esp}
+          sesion={editSesion}
+          onSaved={(s) => { onSesionUpdated(esp.id, s); setEditSesion(null) }}
+          onClose={() => setEditSesion(null)}
         />
       )}
       {bonoModal && (
@@ -265,20 +389,48 @@ function BonoCard({
 
 function PorSesionCard({
   esp,
+  partnerName,
   onDelete,
   onSesionAdded,
+  onSesionUpdated,
+  onSesionDeleted,
 }: {
-  esp:          Especialista
-  onDelete:     (id: string) => void
-  onSesionAdded:(id: string, s: Sesion) => void
+  esp:             Especialista
+  partnerName:     string
+  onDelete:        (id: string) => void
+  onSesionAdded:   (id: string, s: Sesion) => void
+  onSesionUpdated: (id: string, s: Sesion) => void
+  onSesionDeleted: (id: string, sesionId: string) => void
 }) {
   const [histOpen,    setHistOpen]    = useState(false)
   const [sesionModal, setSesionModal] = useState(false)
+  const [editSesion,  setEditSesion]  = useState<Sesion | null>(null)
   const [confirm,     setConfirm]     = useState(false)
 
-  const sesiones     = esp.sesiones ?? []
-  const totalSesiones= sesiones.length
-  const totalGastado = totalSesiones * (esp.precio_sesion ?? 0)
+  const sesiones      = esp.sesiones ?? []
+  const realizadas    = sesiones.filter((s) => s.realizada)
+  const previstas     = sesiones.filter((s) => !s.realizada)
+  const totalSesiones = realizadas.length
+  const totalGastado  = totalSesiones * (esp.precio_sesion ?? 0)
+
+  async function handleToggle(sesionId: string, val: boolean) {
+    try {
+      const updated = await toggleRealizada(sesionId, val)
+      onSesionUpdated(esp.id, updated)
+    } catch {
+      toast.error('No se pudo actualizar')
+    }
+  }
+
+  async function handleDeleteSesion(s: Sesion) {
+    try {
+      await deleteSesion(s.id, s.gasto_id ?? undefined)
+      onSesionDeleted(esp.id, s.id)
+      toast.success('Sesión eliminada')
+    } catch {
+      toast.error('No se pudo eliminar la sesión')
+    }
+  }
 
   return (
     <>
@@ -296,7 +448,7 @@ function PorSesionCard({
               {totalGastado > 0 && (
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Total invertido: <span className="font-semibold text-foreground">{formatCurrency(totalGastado)}</span>
-                  <span className="ml-1 text-muted-foreground/70">· pareja te debe {formatCurrency(totalGastado / 2)}</span>
+                  <span className="ml-1 text-muted-foreground/70">· {partnerName} te debe {formatCurrency(totalGastado / 2)}</span>
                 </p>
               )}
             </div>
@@ -316,7 +468,9 @@ function PorSesionCard({
               <TrendingUp className="w-5 h-5 text-teal-brand flex-shrink-0" />
               <div>
                 <p className="text-lg font-bold text-foreground">{totalSesiones}</p>
-                <p className="text-[11px] text-muted-foreground">sesiones</p>
+                <p className="text-[11px] text-muted-foreground">
+                  sesiones{previstas.length > 0 && <span className="text-ambar"> +{previstas.length} prev.</span>}
+                </p>
               </div>
             </div>
             <div className="glass-subtle rounded-[10px] p-3 flex items-center gap-3">
@@ -337,7 +491,7 @@ function PorSesionCard({
               <Plus className="w-4 h-4" />
               Registrar sesión
             </button>
-            {totalSesiones > 0 && (
+            {sesiones.length > 0 && (
               <button onClick={() => setHistOpen((v) => !v)} className="px-3 py-2 rounded-[10px] glass-subtle text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {histOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
@@ -352,24 +506,23 @@ function PorSesionCard({
             </div>
           )}
 
-          {histOpen && totalSesiones > 0 && (
-            <div className="pt-3 border-t border-border/50 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sesiones</p>
-              {sesiones.map((s, i) => (
-                <div key={s.id || i} className="flex items-center justify-between text-sm py-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{formatFechaCorta(s.fecha)}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-muted-foreground">{formatMinutos(s.duracion)}</span>
-                    {esp.precio_sesion && <span className="font-medium text-foreground">{formatCurrency(esp.precio_sesion)}</span>}
-                  </div>
-                </div>
+          {histOpen && sesiones.length > 0 && (
+            <div className="pt-3 border-t border-border/50 space-y-0.5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Sesiones ({realizadas.length} realizadas{previstas.length > 0 ? ` · ${previstas.length} previstas` : ''})
+              </p>
+              {sesiones.map((s) => (
+                <SesionRow
+                  key={s.id}
+                  s={s}
+                  onEdit={setEditSesion}
+                  onDelete={handleDeleteSesion}
+                  onToggleRealizada={handleToggle}
+                />
               ))}
-              {esp.precio_sesion && totalSesiones > 1 && (
-                <div className="pt-2 border-t border-border/50 flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">50-50 con pareja → te deben</span>
+              {esp.precio_sesion && totalSesiones > 0 && (
+                <div className="pt-2 mt-1 border-t border-border/50 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">50-50 con {partnerName} → te deben</span>
                   <span className="font-semibold text-teal-brand">{formatCurrency(totalGastado / 2)}</span>
                 </div>
               )}
@@ -385,6 +538,14 @@ function PorSesionCard({
           onClose={() => setSesionModal(false)}
         />
       )}
+      {editSesion && (
+        <RegistrarSesionModal
+          especialista={esp}
+          sesion={editSesion}
+          onSaved={(s) => { onSesionUpdated(esp.id, s); setEditSesion(null) }}
+          onClose={() => setEditSesion(null)}
+        />
+      )}
     </>
   )
 }
@@ -392,6 +553,9 @@ function PorSesionCard({
 // ─── Main ───────────────────────────────────────────────────────────────────────
 
 export function EspecialistasView() {
+  const { partner } = useSession()
+  const partnerName = partner?.display_name ?? 'tu pareja'
+
   const [especialistas, setEspecialistas] = useState<Especialista[]>([])
   const [loading,       setLoading]       = useState(true)
   const [modalNuevo,    setModalNuevo]    = useState(false)
@@ -419,6 +583,28 @@ export function EspecialistasView() {
   function handleSesionAdded(espId: string, sesion: Sesion) {
     setEspecialistas((prev) =>
       prev.map((e) => e.id === espId ? { ...e, sesiones: [sesion, ...(e.sesiones ?? [])] } : e)
+    )
+  }
+
+  function handleSesionUpdated(espId: string, updated: Sesion) {
+    setEspecialistas((prev) =>
+      prev.map((e) =>
+        e.id !== espId ? e : {
+          ...e,
+          sesiones: (e.sesiones ?? []).map((s) => s.id === updated.id ? updated : s),
+        }
+      )
+    )
+  }
+
+  function handleSesionDeleted(espId: string, sesionId: string) {
+    setEspecialistas((prev) =>
+      prev.map((e) =>
+        e.id !== espId ? e : {
+          ...e,
+          sesiones: (e.sesiones ?? []).filter((s) => s.id !== sesionId),
+        }
+      )
     )
   }
 
@@ -465,8 +651,25 @@ export function EspecialistasView() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {especialistas.map((esp) =>
               esp.modalidad === 'bono'
-                ? <BonoCard key={esp.id} esp={esp} onDelete={handleDelete} onSesionAdded={handleSesionAdded} onBonoAdded={handleBonoAdded} />
-                : <PorSesionCard key={esp.id} esp={esp} onDelete={handleDelete} onSesionAdded={handleSesionAdded} />
+                ? <BonoCard
+                    key={esp.id}
+                    esp={esp}
+                    partnerName={partnerName}
+                    onDelete={handleDelete}
+                    onSesionAdded={handleSesionAdded}
+                    onSesionUpdated={handleSesionUpdated}
+                    onSesionDeleted={handleSesionDeleted}
+                    onBonoAdded={handleBonoAdded}
+                  />
+                : <PorSesionCard
+                    key={esp.id}
+                    esp={esp}
+                    partnerName={partnerName}
+                    onDelete={handleDelete}
+                    onSesionAdded={handleSesionAdded}
+                    onSesionUpdated={handleSesionUpdated}
+                    onSesionDeleted={handleSesionDeleted}
+                  />
             )}
           </div>
         )}

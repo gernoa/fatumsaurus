@@ -5,6 +5,7 @@ import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
+import { useSession } from '@/contexts/sessionContext'
 import { createEspecialista, type Especialista, type PagadoVia } from '@/lib/salud'
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 const TIPOS = ['Fisioterapeuta', 'Psicólogo/a', 'Nutricionista', 'Logopeda', 'Ostéopata', 'Acupunturista', 'Otro']
 
 export function NuevoEspecialistaModal({ onSaved, onClose }: Props) {
+  const { partner } = useSession()
   const TODAY = new Date().toISOString().split('T')[0]
 
   // Campos base
@@ -195,7 +197,7 @@ export function NuevoEspecialistaModal({ onSaved, onClose }: Props) {
                     ))}
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-2">
-                    Cada sesión se comparte 50-50 → tu pareja te deberá {formatCurrency(parseFloat(precioSes.replace(',', '.')) / 2)} por sesión
+                    Cada sesión se comparte 50-50 → {partner ? `${partner.display_name} te deberá` : 'tu pareja te deberá'} {formatCurrency(parseFloat(precioSes.replace(',', '.')) / 2)} por sesión
                   </p>
                 </div>
               )}
@@ -271,7 +273,7 @@ export function NuevoEspecialistaModal({ onSaved, onClose }: Props) {
                   </div>
                   {precioNum > 0 && (
                     <div className="glass-subtle rounded-[10px] p-2.5 flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Tu pareja te deberá</span>
+                      <span className="text-muted-foreground">{partner ? `${partner.display_name} te deberá` : 'Tu pareja te deberá'}</span>
                       <span className="font-semibold text-teal-brand">{formatCurrency(deudaPareja)}</span>
                     </div>
                   )}

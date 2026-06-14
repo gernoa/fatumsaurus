@@ -50,8 +50,8 @@ interface NavItemProps {
 
 function NavItem({ mod, active, collapsed }: NavItemProps) {
   const { getColor } = useModuleColors()
-  const Icon    = mod.icon
-  const modColor = getColor(mod.slug)
+  const Icon     = mod.icon
+  const modColor = getColor(mod.slug) ?? MODULE_COLOR_NEUTRAL
 
   return (
     <Link
@@ -64,13 +64,17 @@ function NavItem({ mod, active, collapsed }: NavItemProps) {
           ? 'justify-center w-10 h-10 mx-auto'
           : 'gap-3 px-3.5 py-2.5 w-full',
         active
-          ? 'bg-[var(--sidebar-item-active-bg)] text-sidebar-foreground font-semibold'
+          ? cn(
+              'bg-[var(--sidebar-item-active-bg)] text-sidebar-foreground font-semibold',
+              !collapsed && 'border-l-[3px] border-teal-brand pl-[calc(0.875rem-3px)]',
+              collapsed  && 'ring-1 ring-teal-brand/60'
+            )
           : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-[var(--sidebar-item-hover-bg)]'
       )}
     >
       <Icon
         className="w-4 h-4 flex-shrink-0"
-        style={{ color: active ? 'var(--arena)' : (modColor ?? MODULE_COLOR_NEUTRAL) }}
+        style={{ color: modColor }}
       />
       {!collapsed && <span className="truncate">{mod.name}</span>}
     </Link>

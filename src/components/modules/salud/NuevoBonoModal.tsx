@@ -5,7 +5,13 @@ import { X } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
+import { useSession } from '@/contexts/sessionContext'
 import { createBono, type Especialista, type Bono, type PagadoVia } from '@/lib/salud'
+
+function getPaidViaPref(): PagadoVia {
+  if (typeof window === 'undefined') return 'personal'
+  return (localStorage.getItem('fatum_paid_via') as PagadoVia) || 'personal'
+}
 
 interface Props {
   especialista: Especialista
@@ -14,14 +20,22 @@ interface Props {
 }
 
 export function NuevoBonoModal({ especialista, onSaved, onClose }: Props) {
+  const { partner } = useSession()
   const TODAY = new Date().toISOString().split('T')[0]
 
   const [sesiones,   setSesiones]   = useState('10')
   const [precio,     setPrecio]     = useState('')
   const [fechaPago,  setFechaPago]  = useState(TODAY)
-  const [pagadoVia,  setPagadoVia]  = useState<PagadoVia>('personal')
+  const [pagadoVia,  setPagadoVia]  = useState<PagadoVia>(getPaidViaPref())
   const [saving,     setSaving]     = useState(false)
   const [err,        setErr]        = useState('')
+
+  const conjuntaLabel = partner ? `Conjunta con ${partner.display_name}` : 'Cuenta conjunta'
+
+  function handlePagadoVia(v: PagadoVia) {
+    setPagadoVia(v)
+    localStorage.setItem('fatum_paid_via', v)
+  }
 
   const precioNum = parseFloat(precio.replace(',', '.')) || 0
   const deudaPareja = precioNum / 2
@@ -106,12 +120,12 @@ export function NuevoBonoModal({ especialista, onSaved, onClose }: Props) {
             <label className="block text-sm font-medium text-foreground mb-1.5">Pagar con</label>
             <div className="flex gap-2">
               {([
-                { id: 'personal', label: 'Mi cuenta' },
-                { id: 'conjunta', label: 'Cuenta conjunta' },
-              ] as const).map(({ id, label }) => (
+                { id: 'personal' as PagadoVia, label: 'Mi cuenta' },
+                { id: 'conjunta' as PagadoVia, label: conjuntaLabel },
+              ]).map(({ id, label }) => (
                 <button
                   key={id}
-                  onClick={() => setPagadoVia(id)}
+                  onClick={() => handlePagadoVia(id)}
                   className={cn(
                     'flex-1 py-2 rounded-[10px] text-sm font-medium transition-colors',
                     pagadoVia === id
@@ -137,7 +151,7 @@ export function NuevoBonoModal({ especialista, onSaved, onClose }: Props) {
                 <span className="font-medium text-foreground">{formatCurrency(deudaPareja)}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Tu pareja te deberá</span>
+                <span className="text-muted-foreground">{partner ? `${partner.display_name} te deberá` : 'Tu pareja te deberá'}</span>
                 <span className="font-semibold text-teal-brand">{formatCurrency(deudaPareja)}</span>
               </div>
               {parseInt(sesiones) > 0 && (
