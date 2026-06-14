@@ -1,6 +1,12 @@
 import { Heart } from 'lucide-react'
-import { ModulePageShell } from '@/components/layout/ModulePageShell'
+import { ModuleHeader } from '@/components/layout/ModuleHeader'
+import { SaludView } from '@/components/modules/salud/SaludView'
 
 export default function SaludPage() {
-  return <ModulePageShell title="Salud" icon={Heart} />
+  return (
+    <div className="flex flex-col min-h-full">
+      <ModuleHeader title="Salud" icon={Heart} />
+      <SaludView />
+    </div>
+  )
 }
