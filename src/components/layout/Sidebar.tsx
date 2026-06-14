@@ -11,40 +11,31 @@ import type { ModuleDefinition } from '@/lib/constants'
 import { useModuleColors } from '@/contexts/moduleColorsContext'
 
 // ─── Logo brand mark ──────────────────────────────────────────────────────────
+// Logo is 1024×1536 (portrait 2:3) — use fixed 30×45 to preserve ratio
 
-function BrandLogo({ collapsed }: { collapsed: boolean }) {
+function BrandLogo() {
   return (
     <Link
       href="/dashboard"
-      className={cn(
-        'flex items-center gap-2.5 flex-shrink-0 hover:opacity-85 transition-opacity',
-        collapsed && 'justify-center'
-      )}
+      className="flex items-center gap-3 flex-shrink-0 hover:opacity-85 transition-opacity min-w-0"
       title="Dashboard"
     >
-      {/* Logo image */}
-      <div className="flex-shrink-0 w-8 h-8 relative">
-        <Image
-          src="/logo.png"
-          alt="Fatumsaurus logo"
-          fill
-          sizes="32px"
-          className="object-contain"
-          priority
-        />
+      <Image
+        src="/logo.png"
+        alt="Fatumsaurus logo"
+        width={30}
+        height={45}
+        className="flex-shrink-0 object-contain"
+        priority
+      />
+      <div className="leading-[1.15] select-none min-w-0">
+        <p className="text-[13px] font-extrabold tracking-[0.12em] text-sidebar-foreground/90 uppercase">
+          FATUM
+        </p>
+        <p className="text-[13px] font-extrabold tracking-[0.12em] text-teal-brand uppercase">
+          SAURUS
+        </p>
       </div>
-
-      {/* Word mark — hidden when collapsed */}
-      {!collapsed && (
-        <div className="leading-none select-none">
-          <p className="text-[11px] font-bold tracking-[0.14em] text-sidebar-foreground/90 uppercase">
-            FATUM
-          </p>
-          <p className="text-[11px] font-bold tracking-[0.14em] text-teal-brand uppercase">
-            SAURUS
-          </p>
-        </div>
-      )}
     </Link>
   )
 }
@@ -187,50 +178,45 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'hidden lg:flex flex-col bg-sidebar flex-shrink-0',
-        'backdrop-blur-xl backdrop-saturate-150',
+        'hidden lg:flex flex-col flex-shrink-0',
         'border-r border-sidebar-border',
         'transition-[width] duration-150 ease-out',
         isCollapsed ? 'w-16' : 'w-60'
       )}
+      style={{
+        background: 'oklch(0.10 0.030 209 / 80%)',
+        backdropFilter: 'blur(22px) saturate(1.7)',
+        WebkitBackdropFilter: 'blur(22px) saturate(1.7)',
+      }}
     >
       {/* Brand + collapse toggle */}
-      <div
-        className={cn(
-          'flex items-center px-3 flex-shrink-0 border-b border-sidebar-border',
-          isCollapsed ? 'justify-center py-4' : 'justify-between py-4 pl-4'
-        )}
-        style={{ minHeight: 'var(--topbar-height)' }}
-      >
-        {/* Logo only when expanded; just icon when collapsed */}
-        {isCollapsed ? (
-          <Link href="/dashboard" className="w-8 h-8 relative" title="Dashboard">
-            <Image src="/logo.png" alt="" fill sizes="32px" className="object-contain" priority />
+      {isCollapsed ? (
+        /* Collapsed: logo icon centrado + botón expandir debajo */
+        <div className="flex flex-col items-center gap-3 py-4 border-b border-sidebar-border flex-shrink-0">
+          <Link href="/dashboard" title="Dashboard" className="hover:opacity-80 transition-opacity">
+            <Image src="/logo.png" alt="Fatumsaurus" width={28} height={42} className="object-contain" priority />
           </Link>
-        ) : (
-          <BrandLogo collapsed={false} />
-        )}
-
-        {!isCollapsed && (
-          <button
-            onClick={() => setIsCollapsed(true)}
-            className="p-1.5 rounded-lg text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-border transition-colors flex-shrink-0"
-            title="Colapsar sidebar"
-          >
-            <PanelLeftClose className="w-4 h-4" />
-          </button>
-        )}
-
-        {isCollapsed && (
           <button
             onClick={() => setIsCollapsed(false)}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 p-1.5 rounded-lg text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-border transition-colors"
+            className="p-1.5 rounded-lg text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-white/8 transition-colors"
             title="Expandir sidebar"
           >
             <PanelLeftOpen className="w-3.5 h-3.5" />
           </button>
-        )}
-      </div>
+        </div>
+      ) : (
+        /* Expanded: logo + nombre + botón colapsar */
+        <div className="flex items-center justify-between px-4 py-4 border-b border-sidebar-border flex-shrink-0">
+          <BrandLogo />
+          <button
+            onClick={() => setIsCollapsed(true)}
+            className="p-1.5 rounded-lg text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-white/8 transition-colors flex-shrink-0 ml-2"
+            title="Colapsar sidebar"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Scrollable nav */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2 space-y-0.5 relative">
