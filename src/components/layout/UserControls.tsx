@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Bell, Settings, LogOut } from 'lucide-react'
@@ -16,8 +17,16 @@ export function UserControls() {
   const [menuOpen,   setMenuOpen]   = useState(false)
   const [menuPos,    setMenuPos]    = useState<{ top: number; right: number }>({ top: 0, right: 0 })
   const [loggingOut, setLoggingOut] = useState(false)
+  const [mounted,    setMounted]    = useState(false)
 
-  const initial = user.display_name.charAt(0).toUpperCase()
+  useEffect(() => { setMounted(true) }, [])
+
+  // Avatar: emoji if configured, else initial
+  const avatarDisplay = (user.avatar_type === 'emoji' && user.avatar_value)
+    ? user.avatar_value
+    : user.display_name.charAt(0).toUpperCase()
+
+  const isEmoji = user.avatar_type === 'emoji' && !!user.avatar_value
 
   function handleOpenMenu() {
     if (btnRef.current) {
@@ -41,6 +50,49 @@ export function UserControls() {
     router.refresh()
   }
 
+  const dropdown = menuOpen && mounted ? createPortal(
+    <>
+      {/* Backdrop — cierra el menú al clicar fuera */}
+      <div
+        className="fixed inset-0"
+        style={{ zIndex: 'var(--z-dropdown-backdrop)' }}
+        onClick={() => setMenuOpen(false)}
+      />
+
+      {/* Menú — renderizado en document.body, escapa cualquier stacking context */}
+      <div
+        className="fixed w-48 bg-card border border-border rounded-[12px] shadow-[0_4px_20px_rgba(0,18,25,0.18)] py-1.5 overflow-hidden"
+        style={{ zIndex: 'var(--z-modal)', top: menuPos.top, right: menuPos.right }}
+        role="menu"
+      >
+        <div className="px-3 py-2.5 border-b border-border mb-1">
+          <p className="text-sm font-semibold text-foreground">{user.display_name}</p>
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user.email}</p>
+        </div>
+
+        <Link
+          href="/ajustes"
+          role="menuitem"
+          onClick={() => setMenuOpen(false)}
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+        >
+          <Settings className="w-4 h-4 text-muted-foreground" />
+          Ajustes
+        </Link>
+
+        <button
+          role="menuitem"
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rojo-tierra hover:bg-secondary transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Cerrar sesión
+        </button>
+      </div>
+    </>,
+    document.body
+  ) : null
+
   return (
     <div className="flex items-center gap-2 flex-shrink-0">
       {/* Campana */}
@@ -58,10 +110,11 @@ export function UserControls() {
         disabled={loggingOut}
         className={cn(
           'w-8 h-8 rounded-full bg-petroleo text-white',
-          'text-sm font-semibold flex items-center justify-center',
+          'font-semibold flex items-center justify-center',
           'hover:bg-teal-brand transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-          'disabled:opacity-50'
+          'disabled:opacity-50',
+          isEmoji ? 'text-lg' : 'text-sm'
         )}
         aria-label="Menú de usuario"
         aria-expanded={menuOpen}
@@ -69,51 +122,11 @@ export function UserControls() {
       >
         {loggingOut
           ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-          : initial
+          : avatarDisplay
         }
       </button>
 
-      {menuOpen && (
-        <>
-          {/* Backdrop — captura clicks fuera del menú */}
-          <div
-            className="fixed inset-0"
-            style={{ zIndex: 'var(--z-dropdown-backdrop)' }}
-            onClick={() => setMenuOpen(false)}
-          />
-
-          {/* Menú — position: fixed escapa cualquier stacking context */}
-          <div
-            className="fixed w-48 bg-card border border-border rounded-[12px] shadow-[0_4px_20px_rgba(0,18,25,0.15)] py-1.5 overflow-hidden"
-            style={{ zIndex: 'var(--z-dropdown)', top: menuPos.top, right: menuPos.right }}
-            role="menu"
-          >
-            <div className="px-3 py-2.5 border-b border-border mb-1">
-              <p className="text-sm font-semibold text-foreground">{user.display_name}</p>
-              <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user.email}</p>
-            </div>
-
-            <Link
-              href="/ajustes"
-              role="menuitem"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
-            >
-              <Settings className="w-4 h-4 text-muted-foreground" />
-              Ajustes
-            </Link>
-
-            <button
-              role="menuitem"
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rojo-tierra hover:bg-secondary transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Cerrar sesión
-            </button>
-          </div>
-        </>
-      )}
+      {dropdown}
     </div>
   )
 }

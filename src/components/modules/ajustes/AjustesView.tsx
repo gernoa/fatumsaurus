@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Check, Pencil, X, KeyRound, Eye, EyeOff,
   Heart, HeartOff, ChevronDown, Plus,
+  Star, ChevronUp, Eye as EyeIcon, EyeOff as EyeOffIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -44,13 +45,15 @@ function AvatarSection() {
   const router   = useRouter()
   const emojiInputRef = useRef<HTMLInputElement>(null)
 
-  const [type,    setType]    = useState<'initial' | 'emoji'>(
+  const [type,   setType]   = useState<'initial' | 'emoji'>(
     user.avatar_type === 'emoji' ? 'emoji' : 'initial'
   )
-  const [emoji,   setEmoji]   = useState(user.avatar_value ?? '')
-  const [saving,  setSaving]  = useState(false)
+  const [emoji,  setEmoji]  = useState(user.avatar_value ?? '')
+  const [saving, setSaving] = useState(false)
 
-  const displayChar = type === 'emoji' && emoji ? emoji : user.display_name.charAt(0).toUpperCase()
+  const displayChar = type === 'emoji' && emoji
+    ? emoji
+    : user.display_name.charAt(0).toUpperCase()
 
   async function saveAvatar(newType: 'initial' | 'emoji', newEmoji?: string) {
     setSaving(true)
@@ -72,7 +75,6 @@ function AvatarSection() {
   }
 
   function handleEmojiInput(raw: string) {
-    // Keep only the first grapheme cluster (emoji can be multiple code points)
     const chars = [...raw]
     const first = chars.slice(0, 2).join('')
     setEmoji(first)
@@ -81,15 +83,16 @@ function AvatarSection() {
   return (
     <Row>
       <div className="flex items-center gap-4">
-        {/* Preview */}
-        <div className="w-14 h-14 rounded-full bg-petroleo text-white flex items-center justify-center text-2xl font-bold flex-shrink-0 select-none">
+        <div className={cn(
+          'w-14 h-14 rounded-full bg-petroleo text-white flex items-center justify-center font-bold flex-shrink-0 select-none',
+          type === 'emoji' && emoji ? 'text-3xl' : 'text-2xl'
+        )}>
           {displayChar}
         </div>
 
         <div className="flex-1 min-w-0 space-y-2">
           <p className="text-sm font-semibold text-foreground">Avatar</p>
 
-          {/* Mode tabs */}
           <div className="flex gap-1.5">
             <button
               onClick={() => { setType('initial'); saveAvatar('initial') }}
@@ -103,7 +106,10 @@ function AvatarSection() {
               Inicial
             </button>
             <button
-              onClick={() => { setType('emoji'); setTimeout(() => emojiInputRef.current?.focus(), 50) }}
+              onClick={() => {
+                setType('emoji')
+                setTimeout(() => emojiInputRef.current?.focus(), 50)
+              }}
               className={cn(
                 'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
                 type === 'emoji'
@@ -115,7 +121,6 @@ function AvatarSection() {
             </button>
           </div>
 
-          {/* Emoji input — visible only in emoji mode */}
           {type === 'emoji' && (
             <div className="flex items-center gap-3">
               <input
@@ -219,9 +224,7 @@ function EditableField({
 function ChangePassword() {
   const supabase = createClient()
   const [open,   setOpen]   = useState(false)
-  const [curr,   setCurr]   = useState('')
   const [next,   setNext]   = useState('')
-  const [showC,  setShowC]  = useState(false)
   const [showN,  setShowN]  = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -231,7 +234,7 @@ function ChangePassword() {
     const { error } = await supabase.auth.updateUser({ password: next })
     setSaving(false)
     if (error) { toast.error('Error al cambiar la contraseña') }
-    else { toast.success('Contraseña actualizada'); setCurr(''); setNext(''); setOpen(false) }
+    else { toast.success('Contraseña actualizada'); setNext(''); setOpen(false) }
   }
 
   if (!open) {
@@ -245,19 +248,14 @@ function ChangePassword() {
 
   return (
     <div className="space-y-3">
-      {[
-        { val: curr, set: setCurr, show: showC, toggle: () => setShowC(v => !v), placeholder: 'Contraseña actual' },
-        { val: next, set: setNext, show: showN, toggle: () => setShowN(v => !v), placeholder: 'Nueva contraseña (mín. 6 caracteres)' },
-      ].map(({ val, set, show, toggle, placeholder }, i) => (
-        <div key={i} className="relative">
-          <input type={show ? 'text' : 'password'} value={val} onChange={(e) => set(e.target.value)}
-            placeholder={placeholder}
-            className="w-full pl-3.5 pr-10 py-2 rounded-[8px] border border-border bg-secondary/40 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-petroleo/30 focus:border-petroleo" />
-          <button type="button" onClick={toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
-      ))}
+      <div className="relative">
+        <input type={showN ? 'text' : 'password'} value={next} onChange={(e) => setNext(e.target.value)}
+          placeholder="Nueva contraseña (mín. 6 caracteres)" autoFocus
+          className="w-full pl-3.5 pr-10 py-2 rounded-[8px] border border-border bg-secondary/40 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-petroleo/30 focus:border-petroleo" />
+        <button type="button" onClick={() => setShowN(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+          {showN ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      </div>
       <div className="flex gap-2">
         <button onClick={() => setOpen(false)} className="flex-1 py-2 rounded-[8px] text-sm font-medium text-muted-foreground bg-secondary/60 hover:bg-secondary transition-colors">Cancelar</button>
         <button onClick={handleChange} disabled={saving || !next} className="flex-1 py-2 rounded-[8px] text-sm font-semibold text-white bg-petroleo hover:bg-teal-brand disabled:opacity-40 transition-colors">
@@ -289,7 +287,7 @@ function PartnerSection() {
   if (candidates.length === 0) {
     return (
       <Row last>
-        <p className="text-xs text-muted-foreground">No hay otros usuarios. Se crean desde el panel de Supabase.</p>
+        <p className="text-xs text-muted-foreground">No hay otros usuarios en la app todavía.</p>
       </Row>
     )
   }
@@ -300,7 +298,7 @@ function PartnerSection() {
         const isPartner = partner?.id === u.id
         const isLast = idx === candidates.length - 1
         return (
-          <Row key={u.id} last={isLast && !isPartner}>
+          <Row key={u.id} last={isLast}>
             <div className="flex items-center gap-3">
               <div className={cn(
                 'w-9 h-9 rounded-full text-sm font-semibold flex items-center justify-center flex-shrink-0',
@@ -323,20 +321,14 @@ function PartnerSection() {
           </Row>
         )
       })}
-      {partner && (
-        <Row last>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Al vincular una pareja, la cuenta conjunta e inversiones muestran sus datos en pestañas separadas.
-          </p>
-        </Row>
-      )}
     </>
   )
 }
 
-// ─── Modules section (unified: color + toggle + group) ───────────────────────
+// ─── Modules section ──────────────────────────────────────────────────────────
 
-const NEUTRAL_HEX = '#8e9196'
+const NEUTRAL_HEX   = '#8e9196'
+const MAX_FAVORITES = 5
 
 function getDefaultGroup(slug: string): { id: string; label: string } | null {
   const g = MODULE_GROUPS.find((g) => g.modulesSlugs.includes(slug))
@@ -344,8 +336,12 @@ function getDefaultGroup(slug: string): { id: string; label: string } | null {
 }
 
 function ModulesSection() {
-  const { getColor, setColor, isColorTaken, isEnabled, setEnabled, getGroup, setGroup, allGroupIds, addGroup } =
-    useModuleColors()
+  const {
+    getColor, setColor, isColorTaken,
+    isEnabled, setEnabled,
+    getGroup, setGroup, allGroupIds, addGroup,
+    favorites, isFavorite, toggleFavorite,
+  } = useModuleColors()
 
   const [openColorSlug, setOpenColorSlug] = useState<string | null>(null)
   const [openGroupSlug, setOpenGroupSlug] = useState<string | null>(null)
@@ -355,14 +351,22 @@ function ModulesSection() {
 
   return (
     <>
+      <div className="px-4 py-2.5 border-b border-border bg-secondary/20">
+        <p className="text-[11px] text-muted-foreground">
+          <Star className="w-3 h-3 inline-block mr-1 text-ambar" />
+          Máx. {MAX_FAVORITES} favoritos — aparecen arriba del todo en el sidebar
+        </p>
+      </div>
+
       {displayModules.map((mod, idx) => {
-        const isLast   = idx === displayModules.length - 1
-        const color    = getColor(mod.slug)
-        const enabled  = isEnabled(mod.slug, mod.canDisable)
+        const isLast    = idx === displayModules.length - 1
+        const color     = getColor(mod.slug)
+        const enabled   = isEnabled(mod.slug, mod.canDisable)
+        const favorite  = isFavorite(mod.slug)
         const colorOpen = openColorSlug === mod.slug
         const groupOpen = openGroupSlug === mod.slug
+        const canFav    = favorite || favorites.length < MAX_FAVORITES
 
-        // Effective group: user override > default
         const overrideGroupId = getGroup(mod.slug)
         const defaultGroup    = getDefaultGroup(mod.slug)
         const effectiveGroup  = overrideGroupId
@@ -373,31 +377,47 @@ function ModulesSection() {
 
         return (
           <div key={mod.slug}>
-            {/* ── Main row ── */}
             <div className={cn(
-              'flex items-center gap-3 px-4 py-3 min-h-[52px]',
+              'flex items-center gap-2.5 px-4 py-3 min-h-[52px]',
               showBorder && 'border-b border-border',
               !enabled && 'opacity-50'
             )}>
-              {/* Icon — colored */}
               <mod.icon
-                className="w-4 h-4 flex-shrink-0 transition-colors"
+                className="w-4 h-4 flex-shrink-0"
                 style={{ color: color ?? NEUTRAL_HEX }}
               />
 
-              {/* Name + group */}
               <div className="flex-1 min-w-0">
                 <p className={cn('text-sm font-medium text-foreground', !enabled && 'line-through decoration-muted-foreground/40')}>
                   {mod.name}
                 </p>
                 <button
-                  onClick={() => { setOpenGroupSlug(groupOpen ? null : mod.slug); setOpenColorSlug(null) }}
+                  onClick={() => {
+                    if (favorite) return
+                    setOpenGroupSlug(groupOpen ? null : mod.slug)
+                    setOpenColorSlug(null)
+                  }}
                   className="text-[10px] text-muted-foreground/70 hover:text-foreground transition-colors mt-0.5 flex items-center gap-0.5"
                 >
-                  {effectiveGroup?.label ?? 'Sin grupo'}
-                  <ChevronDown className={cn('w-2.5 h-2.5 transition-transform', groupOpen && 'rotate-180')} />
+                  {favorite
+                    ? <span className="text-ambar">★ Favorito</span>
+                    : <>{effectiveGroup?.label ?? 'Sin grupo'}<ChevronDown className={cn('w-2.5 h-2.5 transition-transform', groupOpen && 'rotate-180')} /></>
+                  }
                 </button>
               </div>
+
+              {/* Favorite star */}
+              <button
+                onClick={() => { if (canFav) toggleFavorite(mod.slug) }}
+                disabled={!canFav}
+                title={favorite ? 'Quitar de favoritos' : canFav ? 'Añadir a favoritos' : `Máximo ${MAX_FAVORITES} favoritos`}
+                className={cn(
+                  'p-1 rounded-[6px] transition-colors flex-shrink-0',
+                  favorite ? 'text-ambar hover:text-ambar/70' : canFav ? 'text-muted-foreground/40 hover:text-ambar' : 'text-muted-foreground/20 cursor-not-allowed'
+                )}
+              >
+                <Star className={cn('w-3.5 h-3.5', favorite && 'fill-current')} />
+              </button>
 
               {/* Color swatch */}
               <button
@@ -407,20 +427,16 @@ function ModulesSection() {
                 title="Cambiar color"
               />
 
-              {/* Toggle */}
+              {/* Enabled toggle */}
               {mod.canDisable ? (
                 <button
                   onClick={() => setEnabled(mod.slug, !enabled)}
                   className={cn(
-                    'w-9 h-5 rounded-full flex items-center px-0.5 cursor-pointer transition-colors flex-shrink-0',
+                    'w-9 h-5 rounded-full flex items-center px-0.5 transition-colors flex-shrink-0',
                     enabled ? 'bg-teal-brand' : 'bg-border'
                   )}
-                  aria-label={enabled ? 'Desactivar módulo' : 'Activar módulo'}
                 >
-                  <div className={cn(
-                    'w-4 h-4 rounded-full bg-white shadow-sm transition-transform',
-                    enabled ? 'translate-x-4' : 'translate-x-0'
-                  )} />
+                  <div className={cn('w-4 h-4 rounded-full bg-white shadow-sm transition-transform', enabled ? 'translate-x-4' : 'translate-x-0')} />
                 </button>
               ) : (
                 <span className="text-[10px] font-medium text-muted-foreground/50 bg-secondary px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
@@ -429,17 +445,13 @@ function ModulesSection() {
               )}
             </div>
 
-            {/* ── Color picker ── */}
+            {/* Color picker */}
             {colorOpen && (
-              <div className={cn(
-                'px-4 pb-3.5 pt-2 bg-secondary/25',
-                !isLast && !groupOpen && 'border-b border-border'
-              )}>
+              <div className={cn('px-4 pb-3.5 pt-2 bg-secondary/25', !isLast && !groupOpen && 'border-b border-border')}>
                 <p className="text-[10px] text-muted-foreground mb-2">
-                  Un color solo puede pertenecer a un módulo. Ponlo en &ldquo;sin color&rdquo; primero para liberarlo.
+                  Un color solo puede pertenecer a un módulo. Selecciona &ldquo;sin color&rdquo; para liberarlo.
                 </p>
                 <div className="flex flex-wrap gap-2 items-center">
-                  {/* Sin color */}
                   <button
                     onClick={() => { setColor(mod.slug, null); setOpenColorSlug(null) }}
                     title="Sin color"
@@ -458,7 +470,7 @@ function ModulesSection() {
                         key={p.hex}
                         onClick={() => { if (!taken) { setColor(mod.slug, p.hex); setOpenColorSlug(null) } }}
                         disabled={taken}
-                        title={taken ? 'Ya asignado a otro módulo' : p.name}
+                        title={taken ? 'Ya asignado' : p.name}
                         className={cn(
                           'w-7 h-7 rounded-full border-2 transition-all',
                           selected  && 'border-foreground scale-110 shadow-md',
@@ -473,48 +485,33 @@ function ModulesSection() {
               </div>
             )}
 
-            {/* ── Group picker ── */}
-            {groupOpen && (
-              <div className={cn(
-                'px-4 pb-3.5 pt-2 bg-secondary/25',
-                !isLast && 'border-b border-border'
-              )}>
+            {/* Group picker */}
+            {groupOpen && !favorite && (
+              <div className={cn('px-4 pb-3.5 pt-2 bg-secondary/25', !isLast && 'border-b border-border')}>
                 <p className="text-[10px] text-muted-foreground mb-2">Grupo del módulo en el sidebar</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {/* Reset to default */}
                   <button
                     onClick={() => { setGroup(mod.slug, null); setOpenGroupSlug(null) }}
                     className={cn(
                       'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
-                      !overrideGroupId
-                        ? 'bg-petroleo text-white border-petroleo'
-                        : 'bg-secondary text-muted-foreground border-border hover:border-petroleo/40'
+                      !overrideGroupId ? 'bg-petroleo text-white border-petroleo' : 'bg-secondary text-muted-foreground border-border hover:border-petroleo/40'
                     )}
                   >
                     Por defecto
                   </button>
                   {allGroupIds.map((g) => (
-                    <button
-                      key={g.id}
-                      onClick={() => { setGroup(mod.slug, g.id); setOpenGroupSlug(null) }}
+                    <button key={g.id} onClick={() => { setGroup(mod.slug, g.id); setOpenGroupSlug(null) }}
                       className={cn(
                         'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
-                        overrideGroupId === g.id
-                          ? 'bg-petroleo text-white border-petroleo'
-                          : 'bg-secondary text-muted-foreground border-border hover:border-petroleo/40'
-                      )}
-                    >
+                        overrideGroupId === g.id ? 'bg-petroleo text-white border-petroleo' : 'bg-secondary text-muted-foreground border-border hover:border-petroleo/40'
+                      )}>
                       {g.label}
                     </button>
                   ))}
-
-                  {/* Create new group */}
                   {newGroupName ? (
                     <div className="flex items-center gap-1">
                       <input
-                        autoFocus
-                        type="text"
-                        value={newGroupName}
+                        autoFocus type="text" value={newGroupName}
                         onChange={(e) => setNewGroupName(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && newGroupName.trim()) {
@@ -544,6 +541,81 @@ function ModulesSection() {
                 </div>
               </div>
             )}
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
+// ─── Groups order & visibility section ────────────────────────────────────────
+
+function GroupsSection() {
+  const { allGroupIds, groupOrder, setGroupOrder, isGroupVisible, setGroupVisible } = useModuleColors()
+
+  const baseGroupIds = allGroupIds.map((g) => g.id)
+  const storedOrder  = groupOrder.filter((id) => baseGroupIds.includes(id))
+  const notInOrder   = baseGroupIds.filter((id) => !storedOrder.includes(id))
+  const orderedList  = [...storedOrder, ...notInOrder].map(
+    (id) => ({ id, label: allGroupIds.find((g) => g.id === id)?.label ?? id })
+  )
+
+  function moveUp(idx: number) {
+    if (idx === 0) return
+    const ids = orderedList.map((g) => g.id)
+    ;[ids[idx - 1], ids[idx]] = [ids[idx], ids[idx - 1]]
+    setGroupOrder(ids)
+  }
+
+  function moveDown(idx: number) {
+    if (idx === orderedList.length - 1) return
+    const ids = orderedList.map((g) => g.id)
+    ;[ids[idx], ids[idx + 1]] = [ids[idx + 1], ids[idx]]
+    setGroupOrder(ids)
+  }
+
+  return (
+    <>
+      {orderedList.map((g, idx) => {
+        const visible = isGroupVisible(g.id)
+        const isLast  = idx === orderedList.length - 1
+        return (
+          <div key={g.id} className={cn('flex items-center gap-3 px-4 py-3', !isLast && 'border-b border-border')}>
+            <div className="flex flex-col gap-0.5">
+              <button
+                onClick={() => moveUp(idx)}
+                disabled={idx === 0}
+                className="p-0.5 rounded text-muted-foreground/50 hover:text-foreground disabled:opacity-20 transition-colors"
+              >
+                <ChevronUp className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => moveDown(idx)}
+                disabled={isLast}
+                className="p-0.5 rounded text-muted-foreground/50 hover:text-foreground disabled:opacity-20 transition-colors"
+              >
+                <ChevronDown className="w-3 h-3" />
+              </button>
+            </div>
+
+            <p className={cn('flex-1 text-sm font-medium', !visible && 'text-muted-foreground/50 line-through')}>
+              {g.label}
+            </p>
+
+            <button
+              onClick={() => setGroupVisible(g.id, !visible)}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-xs font-medium transition-colors border',
+                visible
+                  ? 'text-petroleo border-petroleo/30 hover:bg-petroleo/10'
+                  : 'text-muted-foreground border-border hover:border-petroleo/30'
+              )}
+            >
+              {visible
+                ? <><EyeIcon className="w-3 h-3" /> Visible</>
+                : <><EyeOffIcon className="w-3 h-3" /> Oculto</>
+              }
+            </button>
           </div>
         )
       })}
@@ -588,6 +660,10 @@ export function AjustesView() {
 
       <Section title="Módulos">
         <ModulesSection />
+      </Section>
+
+      <Section title="Grupos del sidebar">
+        <GroupsSection />
       </Section>
 
       <p className="text-center text-xs text-muted-foreground pb-4">
