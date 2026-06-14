@@ -103,16 +103,50 @@ El usuario elige tema en Ajustes: **claro / oscuro / seguir al sistema**. Por de
 - Pesos usados: 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
 - Importar desde Google Fonts
 
-### Estilo visual general
+### Estilo visual general — Glass futurista
 
-- **Liquid Glass selectivo:** `backdrop-filter: blur()` en sidebar, modales y cards destacadas. Solo donde aporte. Fallback sólido para dispositivos lentos.
-- **Orbes de fondo:** CSS puro con `filter: blur()`, sin JS. Solo en el área principal del dashboard. No en todas las páginas.
-- **Tarjetas:** sombra suave (`box-shadow`), icono del módulo con su color, valores numéricos con color de acento. Sin bordes de color lateral.
-- **Bordes redondeados:** generosos, `border-radius` de 12–16px en cards, 8–10px en inputs.
-- **Fondo app:** `#F2ECD8` (crema suave — ligeramente más apagado que el crema puro para no resultar demasiado amarillo)
-- **Header de módulo:** fondo `#E8E0CC` (un tono más oscuro que el fondo de página) para diferenciarse visualmente como elemento fijo. Nunca el mismo color que el fondo de página.
-- **Padding de página:** todas las páginas usan `padding: 0 24px 24px` — consistente en todos los módulos sin excepción. El contenido nunca toca los bordes laterales.
-- **Espacio bajo el header:** `padding-top: 16px` en el área de contenido tras el separador del header, para que el primer elemento no quede pegado a la línea divisoria.
+El estilo de la app es **glass futurista**: fondos semitransparentes con backdrop-filter, orbes de color blur en el fondo, tarjetas con efecto cristal. Es el estilo principal de toda la app, no un detalle selectivo.
+
+- **Fondo app:** `oklch(0.975 0.008 205)` — near-white con tinte frío muy sutil. Definido como `--background` en `globals.css`.
+- **Orbes de fondo:** tres círculos CSS con `filter: blur(80px)` en el layout principal (`app/(app)/layout.tsx`). Presentes en TODAS las páginas de la app, no solo el dashboard:
+  - Teal grande (`oklch(0.58 0.105 192)`, opacidad 55%) — esquina top-right
+  - Petróleo oscuro (`oklch(0.24 0.058 209)`, opacidad 55%) — esquina bottom-left
+  - Ámbar dorado (`oklch(0.72 0.170 67)`, opacidad 40%) — centro, tirando a derecha
+- **Colores en OKLCH:** todas las variables CSS y colores custom se expresan en `oklch()`. No usar hex en `globals.css` salvo para los hex de módulo en la paleta.
+- **Bordes redondeados:** generosos — `border-radius` 16–20px en secciones y cards grandes, 12px en items de lista, 8–10px en inputs y badges.
+- **Header de módulo:** sticky, glass-subtle, siempre visible al scrollar. Sin máx-width — ocupa el ancho completo del área de contenido.
+- **Padding de página:** todas las páginas usan `px-6 pt-4 pb-8` (o `pt-5 pb-10` en dashboard). Nunca `max-w-*` en el wrapper de contenido — el ancho lo gestiona el layout del sidebar. El contenido nunca toca los bordes laterales.
+- **Espacio bajo el header:** `padding-top: 16–20px` en el área de contenido tras el separador del header.
+
+### Sistema de clases CSS glass — `globals.css`
+
+Cuatro utilidades definidas en `@layer utilities` de `globals.css`. **Usar estas clases en lugar de duplicar los estilos como inline constants.** Son fiables en SSR/hidratación y ya incluyen `-webkit-backdrop-filter`.
+
+| Clase | Uso | Background | Blur |
+|-------|-----|-----------|------|
+| `.glass` | Paneles, secciones, mini-calendario, modales | `oklch(1 0 0 / 65%)` | 18px |
+| `.glass-subtle` | Topbar, barras sticky | `oklch(1 0 0 / 55%)` | 12px |
+| `.glass-dark` | Sidebar | `oklch(0.10 0.030 209 / 80%)` | 22px |
+| `.card-tech` | Tarjetas individuales, items de lista, cards de módulo | `oklch(1 0 0 / 50%)` | 12px |
+| `.orb` | Posicionamiento absoluto de círculos blur de fondo | — | — |
+
+`.card-tech` incluye `:hover` en CSS (border teal y glow sutil) sin necesidad de handlers JS.
+
+**⚠️ Excepción webkit en Tailwind v4:** las utilidades de Tailwind como `backdrop-blur-xl` NO añaden automáticamente el prefijo `-webkit-backdrop-filter`. Si se necesita backdrop-filter fuera de las clases de `globals.css` (ej: un gradiente custom en inline style), hay que pasar ambas propiedades explícitamente:
+```tsx
+style={{
+  backdropFilter: 'blur(24px) saturate(1.6)',
+  WebkitBackdropFilter: 'blur(24px) saturate(1.6)',  // ← obligatorio en React
+}}
+```
+Las clases `.glass`, `.glass-dark`, etc. ya lo incluyen correctamente en el CSS.
+
+### Sidebar — branding y comportamiento
+
+- **Marca:** logo (`/public/logo.png`, ratio 2:3 portrait) + texto "FATUM" / "SAURUS" en dos líneas. Usar `<Image width={30} height={45}>` (no `fill` — distorsiona imágenes portrait en contenedor cuadrado).
+- **Glass dark:** inline style con `WebkitBackdropFilter` en el `<aside>` (Tailwind v4 no lo añade solo).
+- **Expandido:** 240px. **Colapsado:** 64px. La transición es CSS (`transition-[width]`).
+- **Navegación dinámica:** el sidebar lee de `ModuleColorsProvider` (context) para saber qué módulos están activos, en qué grupos, cuáles son favoritos, y el color de cada icono. Nunca lee de constantes hardcodeadas.
 
 ### Feedback de UI — toasts
 
@@ -1578,8 +1612,11 @@ fatumsaurus/
 
 ### Estilos
 - Tailwind para todo
-- Variables CSS para la paleta en `globals.css`
+- Variables CSS para la paleta en `globals.css` — en OKLCH
 - No inventar colores fuera de la paleta definida
+- **Glass/backdrop-filter:** usar siempre las clases CSS de `globals.css` (`.glass`, `.card-tech`, etc.) en lugar de inline style objects. Son más fiables en SSR/hidratación. Solo usar inline para gradientes personalizados que no tienen clase equivalente; en ese caso incluir siempre `WebkitBackdropFilter` junto a `backdropFilter`.
+- **Wrappers de contenido de módulo:** no añadir `max-w-*` al div raíz del contenido. El ancho disponible lo gestiona el layout (sidebar + área principal). Sí usar `w-full`.
+- **`new Date()` en componentes `'use client'`:** añadir `suppressHydrationWarning` en los elementos cuyo contenido o estilo dependa de la fecha/hora, para evitar errores de hidratación SSR↔cliente.
 
 ### Moneda y formato numérico
 Ver detalle completo en **Ajustes → Moneda y formato numérico**. Resumen: euro (€) fijo, `Intl.NumberFormat('es-ES')`, punto de miles obligatorio desde 1.000€, dos decimales siempre, en todos los campos económicos sin excepción.
@@ -1630,8 +1667,9 @@ Ver detalle completo en **Ajustes → Moneda y formato numérico**. Resumen: eur
 11. Vista de calendario del mes en curso (compacta, con eventos de módulos activos)
 12. Lista de pendientes de hoy
 13. Cards resumen por módulo (estructura vacía pero navegable — se rellenan conforme se construyen módulos)
-14. Orbes CSS de fondo (solo en el Dashboard)
-15. Centro de notificaciones (campana) — estructura y lógica base
+14. Centro de notificaciones (campana) — estructura y lógica base
+
+> ℹ️ Los orbes de fondo CSS ya están en `app/(app)/layout.tsx` desde la Fase 1 — no es necesario añadirlos en el dashboard por separado.
 
 ### Fase 3 — Finanzas (PRIORITARIO)
 
@@ -1845,6 +1883,15 @@ No hay panel de gestión de usuarios dentro de la app — todo se gestiona direc
 | Jun 2026 | Padding de página: 0 24px 24px en todos los módulos sin excepción | Evita que el contenido toque los bordes laterales |
 | Jun 2026 | Padding-top 16px en área de contenido tras el header | Evita que el primer elemento quede pegado al separador del header |
 | Jun 2026 | sonner para toasts/feedback de UI | Integración nativa con shadcn/ui, sin necesidad de sistema propio |
+| Jun 2026 | Estilo glass futurista como estilo principal de toda la app | Reemplaza el estilo plano original. Backdrop-filter + orbes + card-tech en todos los módulos |
+| Jun 2026 | Colores en OKLCH en globals.css | Espacio de color perceptualmente uniforme, mejor para transparencias y mezclas que hex/rgb |
+| Jun 2026 | Orbes de fondo en `app/(app)/layout.tsx` — presentes en TODAS las páginas | No solo en dashboard. Tres orbes: teal top-right, petróleo bottom-left, ámbar centro |
+| Jun 2026 | Clases CSS de globals.css para glass, no inline style objects | Las clases son fiables en SSR/hidratación. Los inline objects pueden variar de orden al recargar en dev |
+| Jun 2026 | Tailwind v4 no añade -webkit-backdrop-filter automáticamente | Siempre usar inline `WebkitBackdropFilter` junto a `backdropFilter` cuando no se use una clase de globals.css |
+| Jun 2026 | suppressHydrationWarning en elementos con new Date() | Los componentes 'use client' aún renderizan en SSR. La hora del servidor ≠ hora del cliente → mismatch de hidratación |
+| Jun 2026 | Sin max-w en wrappers de contenido de módulo | Los módulos llenan el ancho disponible del área de contenido. Finanzas fue la referencia correcta |
+| Jun 2026 | Dashboard: layout hero + 2 columnas (calendario 2/3, pendientes 1/3) + grid de tarjetas | En lg+: dos columnas con proporciones 2fr/1fr. En móvil/tablet: apilado. Tarjetas: 1→2→3→4 columnas |
+| Jun 2026 | Sidebar: FATUM/SAURUS en dos líneas + logo 30×45px con ratio 2:3 | Logo portrait (1024×1536). `<Image width={30} height={45}>` — nunca `fill` en contenedor cuadrado |
 
 ---
 
@@ -1865,5 +1912,5 @@ Mejoras y funcionalidades que se han mencionado durante el diseño pero que no s
 
 ---
 
-*Última actualización: Junio 2026 — correcciones de consistencia, roadmap detallado por fases, aclaración de constants.ts vs Supabase, placeholder de logo, sistema de toasts*  
-*Proyecto planificado en conversación con Claude (claude.ai)*
+*Última actualización: Junio 2026 — estilo glass futurista implementado (sección 3 ampliada), clases CSS glass documentadas, convenciones de código actualizadas (OKLCH, webkit caveat, suppressHydrationWarning, sin max-w en módulos), historial de decisiones de diseño añadido*  
+*Proyecto planificado y desarrollado con Claude Code (claude.ai)*
