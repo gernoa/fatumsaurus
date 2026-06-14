@@ -13,26 +13,33 @@ interface Props {
   onClose:     () => void
 }
 
+function formatMinutos(min: number): string {
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  if (h === 0) return `${m}min`
+  if (m === 0) return `${h}h`
+  return `${h}h ${m}min`
+}
+
 export function RegistrarSesionModal({ especialista, onSaved, onClose }: Props) {
   const TODAY   = new Date().toISOString().split('T')[0]
   const [fecha,     setFecha]     = useState(TODAY)
   const [duracion,  setDuracion]  = useState(especialista.duracion_sesion.toString())
   const [notas,     setNotas]     = useState('')
-  const [pagadoVia, setPagadoVia] = useState<PagadoVia>(especialista.pagado_via ?? 'personal')
+  const [pagadoVia, setPagadoVia] = useState<PagadoVia>('personal')
   const [saving,    setSaving]    = useState(false)
 
+  const esBono      = especialista.modalidad === 'bono'
   const esPorSesion = especialista.modalidad === 'por_sesion'
   const durInt      = parseInt(duracion) || especialista.duracion_sesion
 
-  // Coste estimado para bono (coste real proporcional por minuto)
-  const costMin = especialista.modalidad === 'bono' && especialista.precio_total && especialista.sesiones_contratadas
-    ? especialista.precio_total / (especialista.sesiones_contratadas * especialista.duracion_sesion)
-    : null
-  const costeEst = costMin
-    ? (costMin * durInt).toFixed(2).replace('.', ',') + ' €'
-    : esPorSesion && especialista.precio_sesion
-    ? formatCurrency(especialista.precio_sesion)
-    : null
+  // Calcular pool restante para especialistas de bono
+  const totalMinBonos = esBono
+    ? (especialista.bonos ?? []).reduce((acc, b) => acc + b.sesiones_contratadas * especialista.duracion_sesion, 0)
+    : 0
+  const consumido = (especialista.sesiones ?? []).reduce((acc, s) => acc + s.duracion, 0)
+  const restante  = Math.max(totalMinBonos - consumido, 0)
+  const sesRestantes = especialista.duracion_sesion > 0 ? restante / especialista.duracion_sesion : 0
 
   async function handleSave() {
     setSaving(true)
@@ -42,8 +49,8 @@ export function RegistrarSesionModal({ especialista, onSaved, onClose }: Props) 
         especialista_nombre: especialista.nombre,
         especialista_tipo:   especialista.tipo,
         fecha,
-        duracion:   durInt,
-        notas:      notas.trim() || undefined,
+        duracion:  durInt,
+        notas:     notas.trim() || undefined,
         pagado_via: esPorSesion ? pagadoVia : undefined,
         precio:     esPorSesion ? (especialista.precio_sesion ?? undefined) : undefined,
       })
@@ -95,17 +102,41 @@ export function RegistrarSesionModal({ especialista, onSaved, onClose }: Props) 
             </div>
           </div>
 
-          {/* Coste estimado */}
-          {costeEst && (
-            <div className="glass-subtle rounded-[10px] px-3 py-2 text-sm text-muted-foreground">
-              {especialista.modalidad === 'bono'
-                ? <>Coste estimado de esta sesión: <span className="font-semibold text-foreground">{costeEst}</span></>
-                : <>Se registrará un gasto de <span className="font-semibold text-foreground">{costeEst}</span> en Finanzas</>
-              }
+          {/* Info de bono: pool restante */}
+          {esBono && totalMinBonos > 0 && (
+            <div className="glass-subtle rounded-[12px] p-3 space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Sesiones restantes en el pool</span>
+                <span className="font-semibold text-foreground">{sesRestantes.toFixed(1)}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Tiempo restante</span>
+                <span>{formatMinutos(restante)}</span>
+              </div>
+              {durInt > 0 && restante > 0 && (
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Después de esta sesión quedarán</span>
+                  <span className="font-medium">{formatMinutos(Math.max(restante - durInt, 0))}</span>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Forma de pago — solo para pago por sesión */}
+          {/* Info de pago por sesión: gasto + 50-50 */}
+          {esPorSesion && especialista.precio_sesion && (
+            <div className="glass-subtle rounded-[12px] p-3 space-y-1.5">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Gasto en Finanzas</span>
+                <span className="font-semibold text-foreground">{formatCurrency(especialista.precio_sesion)}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>50-50 con pareja → te deberá</span>
+                <span className="font-semibold text-teal-brand">{formatCurrency(especialista.precio_sesion / 2)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Cuenta de pago (solo para por_sesion con precio) */}
           {esPorSesion && especialista.precio_sesion && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Pagar con</label>
@@ -128,11 +159,6 @@ export function RegistrarSesionModal({ especialista, onSaved, onClose }: Props) 
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1.5">
-                {pagadoVia === 'conjunta'
-                  ? 'El gasto se dividirá 50/50 en la cuenta conjunta'
-                  : 'El gasto irá a tus gastos personales'}
-              </p>
             </div>
           )}
 

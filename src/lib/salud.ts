@@ -5,36 +5,47 @@ import { createClient } from '@/lib/supabase/client'
 export type EstadoCita = 'pendiente' | 'realizada' | 'cancelada'
 
 export interface Cita {
-  id:          string
-  user_id:     string
-  fecha:       string
-  hora:        string
+  id:           string
+  user_id:      string
+  fecha:        string
+  hora:         string
   especialidad: string
-  medico:      string | null
-  centro:      string | null
-  estado:      EstadoCita
-  notas:       string | null
-  resultado:   string | null
-  created_at:  string
+  medico:       string | null
+  centro:       string | null
+  estado:       EstadoCita
+  notas:        string | null
+  resultado:    string | null
+  created_at:   string
 }
 
 export type PagadoVia = 'personal' | 'conjunta'
 
-export interface Especialista {
+export interface Bono {
   id:                   string
+  especialista_id:      string
   user_id:              string
-  nombre:               string
-  tipo:                 string
-  modalidad:            'bono' | 'por_sesion'
-  duracion_sesion:      number
-  precio_total:         number | null
-  sesiones_contratadas: number | null
-  fecha_pago:           string | null
-  precio_sesion:        number | null
+  sesiones_contratadas: number
+  precio_total:         number
+  fecha_pago:           string
   pagado_via:           PagadoVia
+  compartido:           boolean
   activo:               boolean
+  gasto_id:             string | null
   created_at:           string
-  sesiones?:            Sesion[]
+}
+
+export interface Especialista {
+  id:              string
+  user_id:         string
+  nombre:          string
+  tipo:            string
+  modalidad:       'bono' | 'por_sesion'
+  duracion_sesion: number
+  precio_sesion:   number | null   // solo por_sesion
+  activo:          boolean
+  created_at:      string
+  bonos?:          Bono[]
+  sesiones?:       Sesion[]
 }
 
 export interface Sesion {
@@ -52,14 +63,14 @@ export interface Sesion {
 export type TipoMedicamento = 'Medicamento' | 'Suplemento' | 'Vitamina'
 
 export interface Medicamento {
-  id:          string
-  user_id:     string
-  nombre:      string
-  tipo:        TipoMedicamento
-  stock:       number
+  id:           string
+  user_id:      string
+  nombre:       string
+  tipo:         TipoMedicamento
+  stock:        number
   stock_minimo: number
-  activo:      boolean
-  created_at:  string
+  activo:       boolean
+  created_at:   string
   tramo_activo?: Tramo | null
   tomas_hoy?:  TomaHoy[]
 }
@@ -179,26 +190,25 @@ export async function getEspecialistas(): Promise<Especialista[]> {
     .eq('activo', true)
     .order('created_at', { ascending: true })
   if (error) throw error
+  if (!esps || esps.length === 0) return []
 
-  // Fetch sesiones for each
-  const ids = (esps ?? []).map((e: Especialista) => e.id)
-  if (ids.length === 0) return []
+  const ids = esps.map((e: Especialista) => e.id)
 
-  const { data: sesiones, error: err2 } = await sb
-    .from('salud_sesiones')
-    .select('*')
-    .in('especialista_id', ids)
-    .order('fecha', { ascending: false })
-  if (err2) throw err2
+  const [{ data: bonos }, { data: sesiones }] = await Promise.all([
+    sb.from('salud_bonos').select('*').in('especialista_id', ids).eq('activo', true).order('fecha_pago'),
+    sb.from('salud_sesiones').select('*').in('especialista_id', ids).order('fecha', { ascending: false }),
+  ])
 
-  return (esps ?? []).map((e: Especialista) => ({
+  return esps.map((e: Especialista) => ({
     ...e,
+    bonos:    (bonos    ?? []).filter((b: Bono)   => b.especialista_id === e.id),
     sesiones: (sesiones ?? []).filter((s: Sesion) => s.especialista_id === e.id),
   })) as Especialista[]
 }
 
 export async function createEspecialista(
-  payload: Omit<Especialista, 'id' | 'user_id' | 'created_at' | 'sesiones'>
+  esp: { nombre: string; tipo: string; modalidad: 'bono' | 'por_sesion'; duracion_sesion: number; precio_sesion?: number | null },
+  primerBono?: { sesiones_contratadas: number; precio_total: number; fecha_pago: string; pagado_via: PagadoVia }
 ): Promise<Especialista> {
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
@@ -206,44 +216,91 @@ export async function createEspecialista(
 
   const { data, error } = await sb
     .from('salud_especialistas')
-    .insert({ ...payload, user_id: user.id })
+    .insert({ ...esp, user_id: user.id, activo: true })
     .select()
     .single()
   if (error) throw error
 
-  // Registrar gasto en Finanzas si es un bono con precio
-  if (payload.modalidad === 'bono' && payload.precio_total && payload.fecha_pago) {
-    await sb.from('gastos').insert({
-      user_id:     user.id,
-      paid_by_id:  user.id,
-      description: `Bono ${payload.tipo} – ${payload.nombre} (${payload.sesiones_contratadas} sesiones)`,
-      amount:      payload.precio_total,
-      date:        payload.fecha_pago,
-      category:    'salud',
-      paid_via:    payload.pagado_via,
-      origin:      'salud',
-      origin_id:   data.id,
+  const especialista: Especialista = { ...data, bonos: [], sesiones: [] }
+
+  if (primerBono) {
+    const bono = await createBono({
+      especialista_id:     data.id,
+      especialista_nombre: esp.nombre,
+      especialista_tipo:   esp.tipo,
+      ...primerBono,
     })
+    especialista.bonos = [bono]
   }
 
-  return { ...data, sesiones: [] } as Especialista
+  return especialista
+}
+
+export async function createBono(payload: {
+  especialista_id:      string
+  especialista_nombre:  string
+  especialista_tipo:    string
+  sesiones_contratadas: number
+  precio_total:         number
+  fecha_pago:           string
+  pagado_via:           PagadoVia
+}): Promise<Bono> {
+  const sb = createClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) throw new Error('No autenticado')
+
+  // 1. Registrar gasto en Finanzas (compartido 50-50 con pareja por defecto)
+  const { data: gasto, error: ge } = await sb.from('gastos').insert({
+    user_id:     user.id,
+    paid_by_id:  user.id,
+    description: `Bono ${payload.especialista_tipo} – ${payload.especialista_nombre} (${payload.sesiones_contratadas} sesiones)`,
+    amount:      payload.precio_total,
+    date:        payload.fecha_pago,
+    category:    'salud',
+    paid_via:    payload.pagado_via,
+    compartido:  true,
+    origin:      'salud',
+    origin_id:   payload.especialista_id,
+  }).select('id').single()
+  if (ge) throw ge
+
+  // 2. Crear bono
+  const { data, error } = await sb.from('salud_bonos').insert({
+    especialista_id:      payload.especialista_id,
+    user_id:              user.id,
+    sesiones_contratadas: payload.sesiones_contratadas,
+    precio_total:         payload.precio_total,
+    fecha_pago:           payload.fecha_pago,
+    pagado_via:           payload.pagado_via,
+    compartido:           true,
+    activo:               true,
+    gasto_id:             gasto.id,
+  }).select().single()
+  if (error) throw error
+  return data as Bono
+}
+
+export async function deleteEspecialista(id: string): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.from('salud_especialistas').update({ activo: false }).eq('id', id)
+  if (error) throw error
 }
 
 export async function registrarSesion(payload: {
-  especialista_id: string
+  especialista_id:     string
   especialista_nombre: string
-  especialista_tipo: string
-  fecha:        string
-  duracion:     number
-  notas?:       string
-  pagado_via?:  PagadoVia
-  precio?:      number   // para por_sesion
+  especialista_tipo:   string
+  fecha:               string
+  duracion:            number
+  notas?:              string
+  pagado_via?:         PagadoVia   // solo para por_sesion
+  precio?:             number       // solo para por_sesion
 }): Promise<Sesion> {
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) throw new Error('No autenticado')
 
-  // Si es pago por sesión con precio → insertar gasto primero
+  // Para pago por sesión: registrar gasto en Finanzas (siempre compartido 50-50)
   let gastoId: string | null = null
   if (payload.pagado_via && payload.precio) {
     const { data: g, error: ge } = await sb.from('gastos').insert({
@@ -254,6 +311,7 @@ export async function registrarSesion(payload: {
       date:        payload.fecha,
       category:    'salud',
       paid_via:    payload.pagado_via,
+      compartido:  true,
       origin:      'salud',
     }).select('id').single()
     if (ge) throw ge
@@ -277,12 +335,6 @@ export async function registrarSesion(payload: {
   return data as Sesion
 }
 
-export async function deleteEspecialista(id: string): Promise<void> {
-  const sb = createClient()
-  const { error } = await sb.from('salud_especialistas').update({ activo: false }).eq('id', id)
-  if (error) throw error
-}
-
 // ─── MEDICAMENTOS ──────────────────────────────────────────────────────────────
 
 export async function getMedicamentos(): Promise<Medicamento[]> {
@@ -299,7 +351,6 @@ export async function getMedicamentos(): Promise<Medicamento[]> {
 
   const ids = meds.map((m: Medicamento) => m.id)
 
-  // Tramo activo para cada medicamento
   const { data: tramos, error: err2 } = await sb
     .from('salud_tramos')
     .select('*')
@@ -308,7 +359,6 @@ export async function getMedicamentos(): Promise<Medicamento[]> {
     .order('inicio', { ascending: false })
   if (err2) throw err2
 
-  // Tomas de hoy
   const { data: tomasHoy, error: err3 } = await sb
     .from('salud_tomas')
     .select('*')
@@ -320,7 +370,6 @@ export async function getMedicamentos(): Promise<Medicamento[]> {
     const tramo = (tramos ?? []).find((t: Tramo) => t.medicamento_id === med.id && t.activo) ?? null
     const tomasDelMed = (tomasHoy ?? []).filter((t: Toma) => t.medicamento_id === med.id)
 
-    // Build tomas_hoy: for each momento in tramo, check if there's a toma record
     let tomasHoyArr: TomaHoy[] = []
     if (tramo && tramo.frecuencia !== 'si_necesario' && tramo.momentos.length > 0) {
       tomasHoyArr = tramo.momentos.map((momento: string) => {
@@ -337,7 +386,7 @@ export async function getMedicamentos(): Promise<Medicamento[]> {
 }
 
 export async function createMedicamento(
-  med: Omit<Medicamento, 'id' | 'user_id' | 'created_at' | 'activo' | 'tramo_activo' | 'tomas_hoy'>,
+  med:   Omit<Medicamento, 'id' | 'user_id' | 'created_at' | 'activo' | 'tramo_activo' | 'tomas_hoy'>,
   tramo: Omit<Tramo, 'id' | 'medicamento_id' | 'created_at'>
 ): Promise<void> {
   const sb = createClient()
@@ -431,7 +480,7 @@ export async function createEntradaHistorial(
 }
 
 export async function updateEntradaHistorial(
-  id: string,
+  id:      string,
   payload: Partial<Omit<EntradaHistorial, 'id' | 'user_id' | 'created_at'>>
 ): Promise<void> {
   const sb = createClient()
@@ -466,10 +515,10 @@ export async function uploadDocumento(
   const { data: { user } } = await sb.auth.getUser()
   if (!user) throw new Error('No autenticado')
 
-  const ext      = file.name.split('.').pop() ?? 'bin'
-  const path     = `${user.id}/${Date.now()}.${ext}`
-  const tipo     = ext === 'pdf' ? 'PDF' : 'Imagen'
-  const bucket   = 'salud-documentos'
+  const ext    = file.name.split('.').pop() ?? 'bin'
+  const path   = `${user.id}/${Date.now()}.${ext}`
+  const tipo   = ext === 'pdf' ? 'PDF' : 'Imagen'
+  const bucket = 'salud-documentos'
 
   const { error: uploadErr } = await sb.storage.from(bucket).upload(path, file)
   if (uploadErr) throw uploadErr
@@ -477,24 +526,16 @@ export async function uploadDocumento(
   const { data: { publicUrl } } = sb.storage.from(bucket).getPublicUrl(path)
 
   const { error: dbErr } = await sb.from('salud_documentos').insert({
-    user_id:   user.id,
-    nombre:    file.name,
-    tipo,
-    categoria,
-    url:       publicUrl,
-    tamaño_kb: Math.round(file.size / 1024),
-    fecha,
+    user_id: user.id, nombre: file.name, tipo, categoria,
+    url: publicUrl, tamaño_kb: Math.round(file.size / 1024), fecha,
   })
   if (dbErr) throw dbErr
 }
 
 export async function deleteDocumento(id: string, url: string): Promise<void> {
   const sb = createClient()
-
-  // Delete from storage
   const path = url.split('/salud-documentos/')[1]
   if (path) await sb.storage.from('salud-documentos').remove([path])
-
   const { error } = await sb.from('salud_documentos').delete().eq('id', id)
   if (error) throw error
 }
