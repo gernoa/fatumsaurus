@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, ChevronDown, ChevronUp, Clock, TrendingUp, Zap, Users2, Trash2, Pencil } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, Clock, TrendingUp, Zap, Users2, Trash2, Pencil, Receipt } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
 import { useSession } from '@/contexts/sessionContext'
 import {
-  getEspecialistas, deleteEspecialista, toggleRealizada, deleteSesion,
+  getEspecialistas, deleteEspecialista, toggleRealizada, deleteSesion, deleteBono,
   type Especialista, type Sesion, type Bono,
 } from '@/lib/salud'
 import { NuevoEspecialistaModal } from './NuevoEspecialistaModal'
@@ -127,6 +127,8 @@ function BonoCard({
   onSesionUpdated,
   onSesionDeleted,
   onBonoAdded,
+  onBonoUpdated,
+  onBonoDeleted,
 }: {
   esp:             Especialista
   partnerName:     string
@@ -135,12 +137,15 @@ function BonoCard({
   onSesionUpdated: (id: string, s: Sesion) => void
   onSesionDeleted: (id: string, sesionId: string) => void
   onBonoAdded:     (id: string, b: Bono) => void
+  onBonoUpdated:   (id: string, b: Bono) => void
+  onBonoDeleted:   (id: string, bonoId: string) => void
 }) {
-  const [bonosOpen,   setBonosOpen]   = useState(false)
+  const [bonosOpen,   setBonosOpen]   = useState(true)
   const [histOpen,    setHistOpen]    = useState(false)
   const [sesionModal, setSesionModal] = useState(false)
   const [editSesion,  setEditSesion]  = useState<Sesion | null>(null)
   const [bonoModal,   setBonoModal]   = useState(false)
+  const [editBono,    setEditBono]    = useState<Bono | null>(null)
   const [confirm,     setConfirm]     = useState(false)
 
   const bonos    = esp.bonos    ?? []
@@ -179,6 +184,16 @@ function BonoCard({
       toast.success('Sesión eliminada')
     } catch {
       toast.error('No se pudo eliminar la sesión')
+    }
+  }
+
+  async function handleDeleteBono(b: Bono) {
+    try {
+      await deleteBono(b.id, b.gasto_id)
+      onBonoDeleted(esp.id, b.id)
+      toast.success('Bono eliminado')
+    } catch {
+      toast.error('No se pudo eliminar el bono')
     }
   }
 
@@ -237,20 +252,35 @@ function BonoCard({
               {bonosOpen && (
                 <div className="px-3 pb-3 space-y-2 border-t border-border/40 pt-2">
                   {bonos.map((b, i) => (
-                    <div key={b.id} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
-                              style={{ backgroundColor: '#005F73' }}>
-                          {i + 1}
-                        </span>
-                        <span>{formatFechaCorta(b.fecha_pago)}</span>
-                        <span>· {b.sesiones_contratadas} ses · {formatMinutos(b.sesiones_contratadas * esp.duracion_sesion)}</span>
+                    <div key={b.id} className="group flex items-center gap-2 text-xs">
+                      <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+                            style={{ backgroundColor: '#005F73' }}>
+                        {i + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Receipt className="w-3 h-3 flex-shrink-0" />
+                          <span>{formatFechaCorta(b.fecha_pago)}</span>
+                          <span>· {b.sesiones_contratadas} ses</span>
+                          <span className="text-muted-foreground/50">· {b.pagado_via === 'conjunta' ? 'Conjunta' : 'Personal'}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-muted-foreground/60 text-[10px]">
-                          {b.pagado_via === 'conjunta' ? 'Conjunta' : 'Personal'}
-                        </span>
-                        <span className="font-semibold text-foreground">{formatCurrency(b.precio_total)}</span>
+                      <span className="font-semibold text-foreground flex-shrink-0">{formatCurrency(b.precio_total)}</span>
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <button
+                          onClick={() => setEditBono(b)}
+                          className="p-1 rounded-[5px] text-muted-foreground hover:text-foreground hover:bg-white/30 transition-colors"
+                          title="Editar bono"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBono(b)}
+                          className="p-1 rounded-[5px] text-muted-foreground hover:text-rojo-tierra hover:bg-white/30 transition-colors"
+                          title="Eliminar bono"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -386,6 +416,14 @@ function BonoCard({
           especialista={esp}
           onSaved={(b) => onBonoAdded(esp.id, b)}
           onClose={() => setBonoModal(false)}
+        />
+      )}
+      {editBono && (
+        <NuevoBonoModal
+          especialista={esp}
+          bono={editBono}
+          onSaved={(b) => { onBonoUpdated(esp.id, b); setEditBono(null) }}
+          onClose={() => setEditBono(null)}
         />
       )}
     </>
@@ -621,6 +659,28 @@ export function EspecialistasView() {
     )
   }
 
+  function handleBonoUpdated(espId: string, bono: Bono) {
+    setEspecialistas((prev) =>
+      prev.map((e) =>
+        e.id !== espId ? e : {
+          ...e,
+          bonos: (e.bonos ?? []).map((b) => b.id === bono.id ? bono : b),
+        }
+      )
+    )
+  }
+
+  function handleBonoDeleted(espId: string, bonoId: string) {
+    setEspecialistas((prev) =>
+      prev.map((e) =>
+        e.id !== espId ? e : {
+          ...e,
+          bonos: (e.bonos ?? []).filter((b) => b.id !== bonoId),
+        }
+      )
+    )
+  }
+
   if (loading) return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       {[1, 2].map((i) => <div key={i} className="card-tech h-72 animate-pulse bg-secondary/50" />)}
@@ -667,6 +727,8 @@ export function EspecialistasView() {
                     onSesionUpdated={handleSesionUpdated}
                     onSesionDeleted={handleSesionDeleted}
                     onBonoAdded={handleBonoAdded}
+                    onBonoUpdated={handleBonoUpdated}
+                    onBonoDeleted={handleBonoDeleted}
                   />
                 : <PorSesionCard
                     key={esp.id}

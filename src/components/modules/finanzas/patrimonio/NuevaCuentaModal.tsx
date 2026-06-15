@@ -14,7 +14,7 @@ interface Props {
 
 export function NuevaCuentaModal({ initialAccount, onSave, onClose }: Props) {
   const { currentUser, otherUsers } = useUsers()
-  const isEdit = !!initialAccount
+  const isEdit = !!initialAccount?.id
   const TODAY = new Date().toISOString().split('T')[0]
 
   const [name, setName] = useState(initialAccount?.name ?? '')

@@ -282,6 +282,42 @@ export async function createBono(payload: {
   return data as Bono
 }
 
+export async function updateBono(
+  id:      string,
+  payload: { sesiones_contratadas?: number; precio_total?: number; fecha_pago?: string; pagado_via?: PagadoVia },
+  gastoId?: string | null
+): Promise<Bono> {
+  const sb = createClient()
+  const { data, error } = await sb
+    .from('salud_bonos')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+
+  if (gastoId) {
+    const gastoUpdate: Record<string, unknown> = {}
+    if (payload.precio_total !== undefined) gastoUpdate.amount   = payload.precio_total
+    if (payload.fecha_pago   !== undefined) gastoUpdate.date     = payload.fecha_pago
+    if (payload.pagado_via   !== undefined) gastoUpdate.paid_via = payload.pagado_via
+    if (Object.keys(gastoUpdate).length > 0) {
+      await sb.from('gastos').update(gastoUpdate).eq('id', gastoId)
+    }
+  }
+
+  return data as Bono
+}
+
+export async function deleteBono(id: string, gastoId?: string | null): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.from('salud_bonos').update({ activo: false }).eq('id', id)
+  if (error) throw error
+  if (gastoId) {
+    await sb.from('gastos').delete().eq('id', gastoId)
+  }
+}
+
 export async function deleteEspecialista(id: string): Promise<void> {
   const sb = createClient()
   const { error } = await sb.from('salud_especialistas').update({ activo: false }).eq('id', id)

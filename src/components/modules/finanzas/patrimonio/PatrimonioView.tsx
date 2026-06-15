@@ -29,7 +29,7 @@ export function PatrimonioView() {
   const totalLiquidity = totalPersonal + totalConjunta
 
   function handleSaveAccount(data: Omit<PatrimonioAccount, 'id'>) {
-    if (editingAccount) {
+    if (editingAccount?.id) {
       updateAccount(editingAccount.id, data)
       toast.success('Cuenta actualizada')
     } else {
@@ -148,7 +148,7 @@ export function PatrimonioView() {
 
       {showModal && (
         <NuevaCuentaModal
-          initialAccount={editingAccount?.id ? editingAccount : undefined}
+          initialAccount={editingAccount}
           onSave={handleSaveAccount}
           onClose={() => { setShowModal(false); setEditingAccount(undefined) }}
         />

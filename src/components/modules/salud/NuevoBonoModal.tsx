@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
 import { useSession } from '@/contexts/sessionContext'
-import { createBono, type Especialista, type Bono, type PagadoVia } from '@/lib/salud'
+import { createBono, updateBono, type Especialista, type Bono, type PagadoVia } from '@/lib/salud'
 
 function getPaidViaPref(): PagadoVia {
   if (typeof window === 'undefined') return 'personal'
@@ -16,18 +16,20 @@ function getPaidViaPref(): PagadoVia {
 
 interface Props {
   especialista: Especialista
+  bono?:        Bono          // si se pasa, modo edición
   onSaved:      (bono: Bono) => void
   onClose:      () => void
 }
 
-export function NuevoBonoModal({ especialista, onSaved, onClose }: Props) {
+export function NuevoBonoModal({ especialista, bono, onSaved, onClose }: Props) {
   const { partner } = useSession()
   const TODAY = new Date().toISOString().split('T')[0]
+  const isEdit = !!bono
 
-  const [sesiones,   setSesiones]   = useState('10')
-  const [precio,     setPrecio]     = useState('')
-  const [fechaPago,  setFechaPago]  = useState(TODAY)
-  const [pagadoVia,  setPagadoVia]  = useState<PagadoVia>(getPaidViaPref())
+  const [sesiones,   setSesiones]   = useState(bono?.sesiones_contratadas?.toString() ?? '10')
+  const [precio,     setPrecio]     = useState(bono?.precio_total?.toString() ?? '')
+  const [fechaPago,  setFechaPago]  = useState(bono?.fecha_pago ?? TODAY)
+  const [pagadoVia,  setPagadoVia]  = useState<PagadoVia>(bono?.pagado_via ?? getPaidViaPref())
   const [saving,     setSaving]     = useState(false)
   const [err,        setErr]        = useState('')
 
@@ -49,17 +51,27 @@ export function NuevoBonoModal({ especialista, onSaved, onClose }: Props) {
 
     setSaving(true)
     try {
-      const bono = await createBono({
-        especialista_id:      especialista.id,
-        especialista_nombre:  especialista.nombre,
-        especialista_tipo:    especialista.tipo,
-        sesiones_contratadas: ses,
-        precio_total:         precioNum,
-        fecha_pago:           fechaPago,
-        pagado_via:           pagadoVia,
-      })
-      onSaved(bono)
-      toast.success('Bono añadido y gasto registrado en Finanzas')
+      let result: Bono
+      if (isEdit && bono) {
+        result = await updateBono(
+          bono.id,
+          { sesiones_contratadas: ses, precio_total: precioNum, fecha_pago: fechaPago, pagado_via: pagadoVia },
+          bono.gasto_id
+        )
+        toast.success('Bono actualizado')
+      } else {
+        result = await createBono({
+          especialista_id:      especialista.id,
+          especialista_nombre:  especialista.nombre,
+          especialista_tipo:    especialista.tipo,
+          sesiones_contratadas: ses,
+          precio_total:         precioNum,
+          fecha_pago:           fechaPago,
+          pagado_via:           pagadoVia,
+        })
+        toast.success('Bono añadido y gasto registrado en Finanzas')
+      }
+      onSaved(result)
       onClose()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error desconocido'
@@ -75,7 +87,7 @@ export function NuevoBonoModal({ especialista, onSaved, onClose }: Props) {
       <div className="fixed inset-x-4 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm z-[--z-modal] bg-card rounded-t-[20px] sm:rounded-[20px] shadow-[0_8px_40px_rgba(0,18,25,0.2)]">
         <div className="flex items-center justify-between p-5 border-b border-border">
           <div>
-            <h2 className="font-semibold text-foreground">Añadir bono</h2>
+            <h2 className="font-semibold text-foreground">{isEdit ? 'Editar bono' : 'Añadir bono'}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">{especialista.nombre} · {especialista.tipo}</p>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
@@ -193,7 +205,7 @@ export function NuevoBonoModal({ especialista, onSaved, onClose }: Props) {
             disabled={saving}
             className="flex-1 py-2.5 rounded-[10px] bg-petroleo text-white text-sm font-medium hover:bg-teal-brand transition-colors disabled:opacity-50"
           >
-            {saving ? 'Guardando...' : 'Añadir bono'}
+            {saving ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Añadir bono'}
           </button>
         </div>
       </div>
