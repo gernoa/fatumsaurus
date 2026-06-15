@@ -66,6 +66,8 @@ export interface Gasto {
   notes?: string
   thirdParty: GastoThirdParty[]
   recurring?: GastoRecurring
+  origin?: string | null    // slug del módulo origen: 'salud', 'vehiculos', etc.
+  originId?: string | null  // UUID del registro origen (especialista_id, vehiculo_id…)
 }
 
 // ─── Derived calculations ─────────────────────────────────────────────────────
@@ -181,6 +183,8 @@ export function dbToGasto(row: GastoRow): Gasto {
     compartido:  row.compartido ?? false,
     notes:       row.notes ?? undefined,
     thirdParty:  [],
+    origin:      row.origin ?? null,
+    originId:    row.origin_id ?? null,
   }
 }
 

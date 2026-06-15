@@ -1,15 +1,13 @@
 'use client'
 
-import { useMemo } from 'react'
-import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, TrendingDown, TrendingUp, Copy, RefreshCw, Clock } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight, Plus, TrendingDown, TrendingUp, Copy, RefreshCw, Clock, UserCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
 import {
   GASTO_CATEGORIES,
   getCategoryMeta,
-  personalGastos,
   filterByMonth,
   totalAmount,
   categoryTotals,
@@ -19,7 +17,11 @@ import {
 } from '@/lib/gasto'
 import { useGastos } from '@/contexts/gastosContext'
 import { useUsers } from '@/lib/users'
+import { useSession } from '@/contexts/sessionContext'
 import { NuevoGastoModal } from './NuevoGastoModal'
+import { NuevoBonoModal } from '@/components/modules/salud/NuevoBonoModal'
+import { createClient } from '@/lib/supabase/client'
+import { type Especialista, type Bono } from '@/lib/salud'
 
 const TODAY = new Date().toISOString().split('T')[0]
 const TODAY_DATE = new Date(TODAY)
@@ -118,17 +120,26 @@ function UpcomingRecurring({ gastos, onRegister }: { gastos: Gasto[]; onRegister
 // ─── Main view ────────────────────────────────────────────────────────────────
 
 export function GastosView() {
-  const { gastos: allGastos, loading, addGasto, updateGasto, advanceRecurring } = useGastos()
-  const { currentUser } = useUsers()
+  const { gastos: allGastos, loading, addGasto, updateGasto, deleteGasto, advanceRecurring, refreshGastos } = useGastos()
+  const { currentUser, allUsers } = useUsers()
+  const { partner } = useSession()
 
   const [year,  setYear]  = useState(NOW.getFullYear())
   const [month, setMonth] = useState(NOW.getMonth() + 1)
   const [showModal,    setShowModal]    = useState(false)
   const [editingGasto, setEditingGasto] = useState<Gasto | undefined>(undefined)
 
-  // Only personal gastos for this user
+  // Modal contextual para gastos de especialista (origin='salud')
+  const [loadingBono,   setLoadingBono]   = useState(false)
+  const [bonoCtx, setBonoCtx] = useState<{ bono: Bono; especialista: Especialista } | null>(null)
+
+  // Mostrar todos los gastos: los propios + los compartidos del partner
+  // (el filtro definitivo lo hace RLS una vez actualizado)
   const gastos = useMemo(
-    () => personalGastos(allGastos, currentUser.id),
+    () => allGastos.filter((g) =>
+      g.paidById === currentUser.id ||   // yo lo pagué
+      g.compartido                       // está compartido (visible para todos los implicados)
+    ),
     [allGastos, currentUser.id]
   )
 
@@ -145,6 +156,40 @@ export function GastosView() {
   const handlePrev = () => { if (month === 1) { setMonth(12); setYear(y => y - 1) } else setMonth(m => m - 1) }
   const handleNext = () => { if (month === 12) { setMonth(1); setYear(y => y + 1) } else setMonth(m => m + 1) }
 
+  // ── Abrir gasto para editar — ruta directa si tiene origen de módulo ─────────
+  async function handleOpenEdit(g: Gasto) {
+    if (g.origin === 'salud' && g.id) {
+      setLoadingBono(true)
+      try {
+        const sb = createClient()
+        // Buscar el bono vinculado a este gasto
+        const { data: bono } = await sb
+          .from('salud_bonos')
+          .select('*')
+          .eq('gasto_id', g.id)
+          .maybeSingle()
+
+        if (bono) {
+          const { data: esp } = await sb
+            .from('salud_especialistas')
+            .select('*')
+            .eq('id', bono.especialista_id)
+            .maybeSingle()
+          if (esp) {
+            setBonoCtx({ bono, especialista: { ...esp, bonos: [], sesiones: [] } })
+            setLoadingBono(false)
+            return
+          }
+        }
+      } catch {
+        // Si falla la carga del bono, abrimos el modal genérico
+      }
+      setLoadingBono(false)
+    }
+    setEditingGasto(g)
+    setShowModal(true)
+  }
+
   function handleSaveGasto(g: Gasto) {
     const wasEditing = !!editingGasto?.id
     const prevEditingId = editingGasto?.id
@@ -159,15 +204,18 @@ export function GastosView() {
       addGasto(g)
         .then(() => toast.success('Gasto guardado', { id: t }))
         .catch(() => toast.error('Error al guardar', { id: t }))
-      // If registering a recurring, advance the template's nextDate
       if (prevEditingId === undefined) {
         const template = allGastos.find(
           (t) => t.recurring && t.recurring.nextDate === g.date && t.description === g.description
         )
         if (template) advanceRecurring(template.id, g.date)
       }
-      toast.success(g.paidVia === 'conjunta' ? 'Gasto conjunto registrado' : 'Gasto guardado')
     }
+  }
+
+  function handleDeleteGasto(id: string) {
+    deleteGasto(id)
+    toast.success('Gasto eliminado')
   }
 
   function handleRegisterRecurring(template: Gasto) {
@@ -218,7 +266,7 @@ export function GastosView() {
         </div>
 
         {/* Upcoming recurring */}
-        <UpcomingRecurring gastos={gastos} onRegister={handleRegisterRecurring} />
+        <UpcomingRecurring gastos={gastos.filter((g) => g.paidById === currentUser.id)} onRegister={handleRegisterRecurring} />
 
         {/* Summary card */}
         <div className="glass rounded-[16px] p-5">
@@ -260,9 +308,13 @@ export function GastosView() {
         )}
 
         {/* Expense list */}
-        {grouped.length === 0 ? (
+        {loading ? (
+          <div className="space-y-2">
+            {[1,2,3].map((i) => <div key={i} className="card-tech h-14 animate-pulse bg-secondary/50" />)}
+          </div>
+        ) : grouped.length === 0 ? (
           <div className="flex items-center justify-center h-32 rounded-[16px] border border-dashed border-border bg-secondary/40">
-            <p className="text-sm text-muted-foreground">Sin gastos personales en {MONTHS[month].toLowerCase()}</p>
+            <p className="text-sm text-muted-foreground">Sin gastos en {MONTHS[month].toLowerCase()}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -273,30 +325,57 @@ export function GastosView() {
                 </p>
                 {dayGastos.map((g) => {
                   const cat = getCategoryMeta(g.category)
+                  const isPartnerGasto = g.paidById !== currentUser.id
+                  const payer = isPartnerGasto
+                    ? allUsers.find((u) => u.id === g.paidById)
+                    : null
+                  const isLoadingThis = loadingBono && editingGasto?.id === g.id
+
                   return (
                     <div
                       key={g.id}
-                      onClick={() => { setEditingGasto(g); setShowModal(true) }}
-                      className="group card-tech px-4 py-3 cursor-pointer"
+                      onClick={() => { if (!isLoadingThis) handleOpenEdit(g) }}
+                      className="group card-tech px-4 py-3 cursor-pointer flex items-center gap-3"
                     >
                       <div className={cn('w-2 h-2 rounded-full flex-shrink-0', cat.dotClass)} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{g.description}</p>
-                        {g.notes && <p className="text-[11px] text-muted-foreground truncate">{g.notes}</p>}
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {isPartnerGasto && payer && (
+                            <span className="flex items-center gap-1 text-[10px] text-petroleo font-medium">
+                              <UserCircle2 className="w-3 h-3" />
+                              {payer.name}
+                            </span>
+                          )}
+                          {g.compartido && (
+                            <span className="text-[10px] text-teal-brand font-medium">50-50</span>
+                          )}
+                          {g.notes && <p className="text-[11px] text-muted-foreground truncate">{g.notes}</p>}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {g.recurring && <RefreshCw className="w-3 h-3 text-petroleo/50" />}
+                        {g.origin === 'salud' && (
+                          <span className="text-[9px] font-semibold uppercase tracking-wide text-teal-brand/70 hidden sm:block">Salud</span>
+                        )}
                         <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full hidden sm:block', cat.colorClass)}>
                           {cat.label}
                         </span>
-                        <p className="text-sm font-semibold text-foreground">-{formatCurrency(g.amount)}</p>
-                        <button
-                          onClick={(e) => handleDuplicateGasto(g, e)}
-                          className="p-1 rounded-[6px] text-muted-foreground/40 hover:text-petroleo hover:bg-petroleo/8 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-                          title="Duplicar gasto"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
+                        <p className={cn('text-sm font-semibold', isPartnerGasto ? 'text-muted-foreground' : 'text-foreground')}>
+                          {isPartnerGasto ? '' : '-'}{formatCurrency(g.amount)}
+                        </p>
+                        {!isPartnerGasto && (
+                          <button
+                            onClick={(e) => handleDuplicateGasto(g, e)}
+                            className="p-1 rounded-[6px] text-muted-foreground/40 hover:text-petroleo hover:bg-petroleo/8 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                            title="Duplicar gasto"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {isLoadingThis && (
+                          <div className="w-3.5 h-3.5 border-2 border-petroleo/40 border-t-petroleo rounded-full animate-spin" />
+                        )}
                       </div>
                     </div>
                   )
@@ -307,11 +386,27 @@ export function GastosView() {
         )}
       </div>
 
+      {/* Modal genérico de gasto */}
       {showModal && (
         <NuevoGastoModal
           initialGasto={editingGasto}
           onSave={handleSaveGasto}
+          onDelete={editingGasto?.id ? handleDeleteGasto : undefined}
           onClose={() => { setShowModal(false); setEditingGasto(undefined) }}
+        />
+      )}
+
+      {/* Modal de bono de especialista (cuando el gasto viene de Salud) */}
+      {bonoCtx && (
+        <NuevoBonoModal
+          especialista={bonoCtx.especialista}
+          bono={bonoCtx.bono}
+          onSaved={async () => {
+            setBonoCtx(null)
+            await refreshGastos()
+            toast.success('Bono actualizado')
+          }}
+          onClose={() => setBonoCtx(null)}
         />
       )}
     </>

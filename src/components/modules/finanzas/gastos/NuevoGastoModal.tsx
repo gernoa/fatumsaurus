@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Plus, Trash2, RefreshCw, Users } from 'lucide-react'
+import { X, Plus, Trash2, RefreshCw, Users, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/format'
 import {
@@ -16,8 +16,9 @@ import { useSession } from '@/contexts/sessionContext'
 
 interface Props {
   initialGasto?: Gasto
-  onSave: (gasto: Gasto) => void
-  onClose: () => void
+  onSave:   (gasto: Gasto) => void
+  onDelete?: (id: string) => void
+  onClose:  () => void
 }
 
 const TODAY = new Date().toISOString().split('T')[0]
@@ -38,7 +39,7 @@ function addPeriod(dateStr: string, freq: RecurringFrequency): string {
   return d.toISOString().slice(0, 10)
 }
 
-export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
+export function NuevoGastoModal({ initialGasto, onSave, onDelete, onClose }: Props) {
   // empty id = duplicating (pre-filled but saves as new entry)
   const isEdit = !!(initialGasto?.id)
   const { accounts } = usePatrimonio()
@@ -82,7 +83,8 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
   const [compartido, setCompartido] = useState<boolean>(
     initialGasto?.compartido ?? !!partner
   )
-  const [error, setError] = useState('')
+  const [error,          setError]          = useState('')
+  const [confirmDelete,  setConfirmDelete]  = useState(false)
 
   const selectedAccount = userAccounts.find((a) => a.id === accountId)
   const paidVia = selectedAccount?.type ?? 'personal'
@@ -163,7 +165,7 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
       />
 
       <div
-        className="fixed inset-x-4 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md bg-card rounded-t-[20px] sm:rounded-[20px] shadow-[0_8px_40px_rgba(0,18,25,0.2)]"
+        className="fixed inset-x-4 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md glass rounded-t-[20px] sm:rounded-[20px] shadow-[0_8px_40px_rgba(0,18,25,0.25)]"
         style={{ zIndex: 'var(--z-modal)' }}
       >
         <div className="sm:hidden flex justify-center pt-3 pb-1">
@@ -464,7 +466,31 @@ export function NuevoGastoModal({ initialGasto, onSave, onClose }: Props) {
           {error && <p className="text-xs text-rojo-tierra font-medium">{error}</p>}
         </div>
 
+        {/* Delete confirmation inline */}
+        {confirmDelete && isEdit && onDelete && (
+          <div className="mx-5 mb-0 mt-1 flex items-center gap-3 px-4 py-3 bg-rojo-tierra/8 border border-rojo-tierra/20 rounded-[10px]">
+            <AlertTriangle className="w-4 h-4 text-rojo-tierra flex-shrink-0" />
+            <p className="flex-1 text-xs text-foreground">¿Eliminar este gasto definitivamente?</p>
+            <button onClick={() => setConfirmDelete(false)} className="text-xs text-muted-foreground hover:text-foreground">Cancelar</button>
+            <button
+              onClick={() => { onDelete(initialGasto!.id); onClose() }}
+              className="text-xs font-semibold text-rojo-tierra hover:underline"
+            >
+              Eliminar
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-2 px-5 py-4 border-t border-border">
+          {isEdit && onDelete && !confirmDelete ? (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="p-2.5 rounded-[10px] text-muted-foreground hover:text-rojo-tierra hover:bg-rojo-tierra/8 transition-colors flex-shrink-0"
+              title="Eliminar gasto"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          ) : null}
           <button onClick={onClose} className="flex-1 py-2.5 text-sm font-medium text-muted-foreground bg-secondary hover:bg-border rounded-[10px] transition-colors">
             Cancelar
           </button>

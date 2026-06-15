@@ -67,7 +67,7 @@ export function NuevaCuentaModal({ initialAccount, onSave, onClose }: Props) {
       />
 
       <div
-        className="fixed inset-x-4 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm bg-card rounded-t-[20px] sm:rounded-[20px] shadow-[0_8px_40px_rgba(0,18,25,0.2)]"
+        className="fixed inset-x-4 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm glass rounded-t-[20px] sm:rounded-[20px] shadow-[0_8px_40px_rgba(0,18,25,0.25)]"
         style={{ zIndex: 'var(--z-modal)' }}
       >
         <div className="sm:hidden flex justify-center pt-3 pb-1">

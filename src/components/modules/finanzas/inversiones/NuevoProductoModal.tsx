@@ -86,7 +86,7 @@ export function NuevoProductoModal({ initial, onSave, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full sm:max-w-md max-h-[90vh] flex flex-col bg-background rounded-t-[24px] sm:rounded-[20px] shadow-xl overflow-hidden">
+      <div className="relative z-10 w-full sm:max-w-md max-h-[90vh] flex flex-col glass rounded-t-[24px] sm:rounded-[20px] shadow-[0_8px_40px_rgba(0,18,25,0.25)] overflow-hidden">
 
         <div className="flex justify-center pt-3 pb-0 sm:hidden flex-shrink-0">
           <div className="w-10 h-1 rounded-full bg-border" />

@@ -55,7 +55,7 @@ export default function LoginPage() {
       </div>
 
       {/* Card */}
-      <div className="bg-card rounded-[20px] border border-border shadow-[0_8px_40px_rgba(0,0,0,0.3)] p-7">
+      <div className="glass rounded-[20px] shadow-[0_8px_40px_rgba(0,18,25,0.25)] p-7">
         <h1 className="text-lg font-bold text-foreground mb-5">Iniciar sesión</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">

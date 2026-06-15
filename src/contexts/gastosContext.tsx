@@ -37,7 +37,8 @@ export function GastosProvider({ children }: { children: ReactNode }) {
     const { data, error } = await sb
       .from('gastos')
       .select('*')
-      .or(`user_id.eq.${user.id},paid_by_id.eq.${user.id}`)
+      // user_id/paid_by_id = propios; compartido = visibles por RLS para el otro usuario
+      .or(`user_id.eq.${user.id},paid_by_id.eq.${user.id},compartido.eq.true`)
       .order('date', { ascending: false })
 
     if (!error && data) {
@@ -86,7 +87,7 @@ export function GastosProvider({ children }: { children: ReactNode }) {
           date:        g.date,
           category:    g.category,
           paid_via:    g.paidVia,
-          compartido:  g.paidVia === 'conjunta',
+          compartido:  g.compartido,
           notes:       g.notes ?? null,
         }).eq('id', g.id).then(({ error }) => {
           if (error) console.error('Failed to update gasto:', error)

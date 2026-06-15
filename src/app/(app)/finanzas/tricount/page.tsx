@@ -45,7 +45,7 @@ export default function TricountPage() {
             <Link
               key={group.id}
               href={`/finanzas/tricount/${group.id}`}
-              className="block bg-card rounded-[16px] border border-border shadow-[0_2px_12px_rgba(0,18,25,0.08)] hover:shadow-[0_4px_20px_rgba(0,18,25,0.12)] transition-shadow p-5"
+              className="block card-tech rounded-[16px] p-5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -102,7 +102,7 @@ export default function TricountPage() {
               <Link
                 key={group.id}
                 href={`/finanzas/tricount/${group.id}`}
-                className="flex items-center justify-between bg-card/60 rounded-[12px] border border-border px-4 py-3 hover:bg-card transition-colors"
+                className="flex items-center justify-between card-tech rounded-[12px] px-4 py-3"
               >
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="w-4 h-4 text-teal-brand flex-shrink-0" />

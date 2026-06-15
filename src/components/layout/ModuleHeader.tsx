@@ -11,8 +11,8 @@ interface ModuleHeaderProps {
 export function ModuleHeader({ title, icon: Icon, action, description }: ModuleHeaderProps) {
   return (
     <div
-      className="sticky top-0 z-[--z-sticky] flex items-center justify-between px-6 border-b border-border"
-      style={{ backgroundColor: 'var(--header-surface)', minHeight: 'var(--topbar-height)' }}
+      className="sticky top-0 z-[--z-sticky] glass-subtle flex items-center justify-between px-6 border-b border-border/50"
+      style={{ minHeight: 'var(--topbar-height)' }}
     >
       {/* Left: icon + title */}
       <div className="flex items-center gap-3 min-w-0 py-3">
