@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { type PatrimonioAccount } from '@/lib/patrimonio'
 import { useSession } from '@/contexts/sessionContext'
 
@@ -13,34 +13,32 @@ interface PatrimonioContextValue {
 
 const PatrimonioContext = createContext<PatrimonioContextValue | null>(null)
 
+function storageKey(userId: string) {
+  return `fatum_patrimonio_${userId}`
+}
+
+function loadAccounts(userId: string): PatrimonioAccount[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(storageKey(userId))
+    return raw ? (JSON.parse(raw) as PatrimonioAccount[]) : []
+  } catch {
+    return []
+  }
+}
+
 export function PatrimonioProvider({ children }: { children: ReactNode }) {
   const { user } = useSession()
-  const today    = new Date().toISOString().split('T')[0]
 
-  const [accounts, setAccounts] = useState<PatrimonioAccount[]>(() => [
-    {
-      id:             'acc-default-personal',
-      ownerId:        user.id,
-      name:           'Mi cuenta',
-      type:           'personal',
-      emoji:          '🏦',
-      balance:        0,
-      lastUpdated:    today,
-      isActive:       true,
-      participantIds: [user.id],
-    },
-    {
-      id:             'acc-default-conjunta',
-      ownerId:        'shared',
-      name:           'Cuenta conjunta',
-      type:           'conjunta',
-      emoji:          '🏠',
-      balance:        0,
-      lastUpdated:    today,
-      isActive:       true,
-      participantIds: [user.id],
-    },
-  ])
+  const [accounts, setAccounts] = useState<PatrimonioAccount[]>(() =>
+    loadAccounts(user.id)
+  )
+
+  // Persist to localStorage whenever accounts change
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(storageKey(user.id), JSON.stringify(accounts))
+  }, [accounts, user.id])
 
   function addAccount(a: Omit<PatrimonioAccount, 'id'>) {
     setAccounts((prev) => [...prev, { ...a, id: `acc-${Date.now()}` }])
